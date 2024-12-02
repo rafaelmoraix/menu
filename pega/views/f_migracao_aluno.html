@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de arquivo</title>
+    <link rel="stylesheet" href="/public/css/form_migraçao.css"> 
+    
+    
+    <style>
+
+
+    
+    
+    body {
+    font-family: 'Open Sans', sans-serif; /* Use a mesma fonte do menu */
+    background-color: #f2f2f2; /* Use a mesma cor de fundo do menu */
+    color: #333; /* Cor do texto escura para contraste */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+     /* ... outros estilos ... */
+     width: 100vw; /* Largura da tela toda */
+    height: 100vh; /* Altura da tela toda */
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;   /* Ajuste o border-radius para combinar com o menu */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); /* Use a mesma sombra do menu */
+    /* ... outros estilos ... */
+    background-image: url("/public/img/foccus_background.png");
+    background-repeat: no-repeat;
+    background-size: 1440px 1000px;
+     /* ... outros estilos ... */
+     text-align: center; /* Centraliza o conteúdo dentro do container */
+}
+
+
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #fe5f2f; /* Use a mesma cor do menu */
+    
+}
+
+.checkbox {
+    margin-bottom: 20px;
+}
+
+.btn {
+    background-color: #007bff; /* Use a mesma cor do botão "submit" do menu */
+    color: white;
+    padding: 15px 30px;
+    font-size: 18px; /* Aumenta o tamanho da fonte */
+    border: none;
+    border-radius: 25px; /* Ajuste o border-radius para combinar com o menu */
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adiciona sombra */
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3; /* Cor mais escura para o hover */
+    transform: translateY(-2px); /* Efeito de elevação */
+}
+
+/* Estilo para o input type="file" */
+.checkbox input[type="file"] {
+    display: none;
+}
+
+.checkbox label {
+    background-color: #fe5f2f; /* Use a mesma cor do menu */
+    color: white;
+    padding: 12px 24px;
+    font-size: 16px; /* Aumenta o tamanho da fonte */
+    border: none;
+    border-radius: 20px; /* Ajuste o border-radius para combinar com o menu */
+    cursor: pointer;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Adiciona sombra */
+    transition: background-color 0.3s ease; /* Adiciona transição para o hover */
+}
+
+.checkbox label:hover {
+    background-color: #dc3545; /* Use a mesma cor do botão "cancel" do menu */
+}
+    </style>
+</head>
+<body>
+    <div class="container">    
+        <h2>Anexe o arquivo abaixo</h2>
+        <form action="../views/migracao_escola.php" method="POST" enctype="multipart/form-data">
+            <div class="form-group"> 
+                <div class="checkbox">
+                    <label for="file">Escolher arquivo</label> <input type="file" id="file" name="file"> 
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

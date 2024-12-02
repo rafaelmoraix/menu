@@ -1,0 +1,107 @@
+body {
+    font-family: 'Open Sans', sans-serif; /* Fonte mais moderna */
+    background-color: #f2f2f2; /* Cor de fundo neutra */
+    color: #333; /* Cor do texto escura para contraste */
+}
+
+.sidebar {
+    width: 200px;
+    position: fixed;
+    background-color: #222; /* Cor de fundo da sidebar escura */
+    color: #fe5f2f; /* Cor do texto da sidebar */
+    height: 100%;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar a {
+    color: #fff; /* Cor do link na sidebar */
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    transition: background 0.3s ease;
+    
+}
+
+.sidebar a:hover {
+    background-color: #444; /* Cor de fundo do link no hover */
+}
+
+#formulario-container {
+    position: fixed;
+    display: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    max-width: 70vw;
+    width: auto;
+    overflow: auto;
+}
+
+.formulario {
+    display: flex;
+    flex-direction: column;
+}
+
+.formulario label {
+    margin-bottom: 5px; /* Espaçamento entre rótulo e campo */
+    font-weight: bold; /* Rótulos em negrito */
+    font-size: 14px; /* Diminui o tamanho da fonte */
+}
+
+.formulario input[type="text"],
+.formulario select {
+    padding: 10px;
+    border: 1px solid #ccc; /* Borda suave */
+    border-radius: 5px; /* Cantos arredondados */
+    margin-bottom: 10px; /* Espaçamento entre os campos */
+    width: 100%; /* Ocupa toda a largura disponível */
+}
+
+.formulario input[type="text"]:focus {
+    outline: none; /* Remove a borda padrão do foco */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Efeito de foco */
+}
+
+.submitbtn, .cancelbtn {
+    margin-top: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submitbtn {
+    background-color: #28a745; /* Cor de fundo do botão submit */
+    color: white;
+}
+
+.cancelbtn {
+    background-color: #dc3545; /* Cor de fundo do botão cancel */
+    color: white;
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 600px) {
+    .sidebar {
+        width: 150px; /* Diminui ainda mais a largura da sidebar */
+    }
+  #formulario-container {
+    
+    padding: 10px; /* Reduz o padding em telas menores */
+  }
+
+  #formulario-cad-aluno input[type="text"],
+  #formulario-cad-aluno select {
+    width: auto;
+  }
+}
