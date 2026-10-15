@@ -9,13 +9,11 @@
   const body = document.body;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* Intro */
-  const finishIntro = () => {
-    body.classList.remove('is-loading');
-    requestAnimationFrame(() => body.classList.add('is-ready'));
-  };
-  window.addEventListener('load', () => setTimeout(finishIntro, reduceMotion ? 0 : 1500));
-  setTimeout(finishIntro, 4000); // fallback caso alguma fonte demore
+  /* Animação de entrada do hero (título e símbolo) */
+  const start = () => requestAnimationFrame(() => body.classList.add('is-ready'));
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start);
+  setTimeout(start, 1500); // fallback caso alguma fonte demore
 
   /* Header: fundo ao rolar, esconde ao descer */
   const header = document.querySelector('.header');
