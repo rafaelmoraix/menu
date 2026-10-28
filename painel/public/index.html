@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel SMM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◆</span>
+      <span>Painel SMM</span>
+      <span id="mock-badge" class="badge badge-warn" hidden>Demonstração</span>
+    </div>
+    <button id="balance" class="balance" title="Atualizar saldo">
+      <span class="balance-label">Saldo</span>
+      <span id="balance-value">—</span>
+    </button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="novo" role="tab">Novo pedido</button>
+    <button class="tab" data-tab="pedidos" role="tab">Pedidos</button>
+    <button class="tab" data-tab="servicos" role="tab">Serviços</button>
+  </nav>
+
+  <main>
+    <!-- Novo pedido -->
+    <section id="tab-novo" class="panel">
+      <form id="order-form" class="card form" autocomplete="off">
+        <label>Buscar serviço
+          <input id="svc-search" type="search" placeholder="Nome, categoria ou ID">
+        </label>
+
+        <label>Categoria
+          <select id="svc-category"></select>
+        </label>
+
+        <label>Serviço
+          <select id="svc-select" name="service" required></select>
+        </label>
+
+        <div id="svc-info" class="svc-info" hidden></div>
+
+        <label>Link
+          <input name="link" type="url" placeholder="https://..." required>
+        </label>
+
+        <label id="qty-field">Quantidade
+          <input name="quantity" type="number" inputmode="numeric" min="1" step="1">
+          <small id="qty-hint" class="hint"></small>
+        </label>
+
+        <label id="comments-field" hidden>Comentários (um por linha)
+          <textarea name="comments" rows="6" placeholder="Comentário 1&#10;Comentário 2"></textarea>
+          <small id="comments-hint" class="hint"></small>
+        </label>
+
+        <details id="drip" class="drip">
+          <summary>Drip-feed (entregar em etapas)</summary>
+          <div class="row">
+            <label>Execuções
+              <input name="runs" type="number" inputmode="numeric" min="1" step="1" placeholder="Ex.: 5">
+            </label>
+            <label>Intervalo (min)
+              <input name="interval" type="number" inputmode="numeric" min="1" step="1" placeholder="Ex.: 30">
+            </label>
+          </div>
+          <small class="hint">A quantidade acima é entregue em cada execução. Total = quantidade × execuções.</small>
+        </details>
+
+        <div class="summary">
+          <div>
+            <span class="muted">Custo estimado</span>
+            <strong id="cost">—</strong>
+          </div>
+          <button type="submit" class="btn btn-primary" id="submit-btn">Fazer pedido</button>
+        </div>
+        <p id="cost-warn" class="warn" hidden></p>
+      </form>
+    </section>
+
+    <!-- Pedidos -->
+    <section id="tab-pedidos" class="panel" hidden>
+      <div class="toolbar">
+        <select id="status-filter">
+          <option value="">Todos os status</option>
+          <option>Pending</option>
+          <option>In progress</option>
+          <option>Processing</option>
+          <option>Completed</option>
+          <option>Partial</option>
+          <option>Canceled</option>
+        </select>
+        <div class="spacer"></div>
+        <button class="btn" id="import-btn">Importar IDs</button>
+        <button class="btn" id="refresh-orders">Atualizar</button>
+      </div>
+
+      <div id="bulk-bar" class="bulk" hidden>
+        <span id="bulk-count"></span>
+        <button class="btn" id="bulk-refill">Refill</button>
+        <button class="btn btn-danger" id="bulk-cancel">Cancelar</button>
+      </div>
+
+      <div class="card table-wrap">
+        <table class="table" id="orders-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="check-all" aria-label="Selecionar todos"></th>
+              <th>ID</th>
+              <th>Serviço</th>
+              <th>Link</th>
+              <th>Qtd.</th>
+              <th>Status</th>
+              <th>Início</th>
+              <th>Restante</th>
+              <th>Custo</th>
+              <th>Data</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="orders-empty" class="empty" hidden>Nenhum pedido ainda.</p>
+      </div>
+    </section>
+
+    <!-- Serviços -->
+    <section id="tab-servicos" class="panel" hidden>
+      <div class="toolbar">
+        <input id="svc-filter" type="search" placeholder="Filtrar serviços…">
+        <select id="svc-filter-cat"></select>
+        <button class="btn" id="refresh-services">Recarregar</button>
+      </div>
+      <div class="card table-wrap">
+        <table class="table" id="services-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Serviço</th>
+              <th>Preço / 1000</th>
+              <th>Mín.</th>
+              <th>Máx.</th>
+              <th>Refill</th>
+              <th>Cancelar</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="services-empty" class="empty" hidden>Nenhum serviço encontrado.</p>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="import-dialog">
+    <form method="dialog" class="form">
+      <h3>Importar pedidos</h3>
+      <p class="muted">Cole IDs de pedidos feitos fora deste painel para acompanhar aqui (separados por vírgula, espaço ou linha).</p>
+      <textarea id="import-ids" rows="4" placeholder="23501, 23502"></textarea>
+      <div class="row end">
+        <button class="btn" value="cancel">Fechar</button>
+        <button class="btn btn-primary" value="ok" id="import-ok">Importar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

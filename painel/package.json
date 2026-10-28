@@ -1,0 +1,14 @@
+{
+  "name": "painel-smm",
+  "version": "1.0.0",
+  "description": "Painel web para a API baratoebom.com (serviços, pedidos, status, refill, cancelamento e saldo)",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "demo": "MOCK=1 node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
