@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MT Multimarcas | Catálogo de Motos</title>
+  <meta name="description" content="MT Multimarcas — Excelência em duas rodas. Motos novas e seminovas de várias marcas, com financiamento facilitado e aceitamos sua moto na troca.">
+  <meta name="theme-color" content="#0b0907">
+  <meta property="og:title" content="MT Multimarcas | Catálogo de Motos">
+  <meta property="og:description" content="Motos novas e seminovas com procedência. Excelência em duas rodas.">
+  <meta property="og:image" content="img/logo.png">
+  <link rel="icon" type="image/png" href="img/logo-mark.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===================== CABEÇALHO ===================== -->
+  <header class="topo" id="topo">
+    <div class="container topo__inner">
+      <a href="#inicio" class="marca" aria-label="MT Multimarcas - início">
+        <img src="img/logo-mark.png" alt="" class="marca__img">
+        <span class="marca__txt">MT <strong>MULTIMARCAS</strong></span>
+      </a>
+
+      <nav class="menu" id="menu" aria-label="Menu principal">
+        <a href="#inicio">Início</a>
+        <a href="#catalogo">Catálogo</a>
+        <a href="#financiamento">Financiamento</a>
+        <a href="#sobre">Sobre</a>
+        <a href="#contato">Contato</a>
+      </nav>
+
+      <a class="btn btn--ouro btn--sm topo__cta js-whats" data-msg="Olá! Vim pelo site da MT Multimarcas e gostaria de mais informações." href="#" target="_blank" rel="noopener">
+        <i class="fa-brands fa-whatsapp"></i> <span>Fale conosco</span>
+      </a>
+
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" id="inicio">
+      <div class="hero__brilho" aria-hidden="true"></div>
+      <div class="container hero__inner">
+        <div class="hero__texto">
+          <span class="selo"><i class="fa-solid fa-shield-halved"></i> Procedência garantida</span>
+          <h1>Sua próxima moto <span class="ouro">está aqui.</span></h1>
+          <p>Motos novas e seminovas das melhores marcas, revisadas e com documentação em dia. Financiamento facilitado e aceitamos sua moto na troca.</p>
+          <div class="hero__acoes">
+            <a href="#catalogo" class="btn btn--ouro"><i class="fa-solid fa-motorcycle"></i> Ver catálogo</a>
+            <a href="#financiamento" class="btn btn--contorno"><i class="fa-solid fa-calculator"></i> Simular parcelas</a>
+          </div>
+          <ul class="numeros">
+            <li><strong id="numEstoque">0</strong><span>motos disponíveis</span></li>
+            <li><strong id="numMarcas">0</strong><span>marcas</span></li>
+            <li><strong>100%</strong><span>vistoriadas</span></li>
+          </ul>
+        </div>
+        <div class="hero__logo">
+          <img src="img/logo-transparente.png" alt="MT Multimarcas — Excelência em duas rodas">
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MARCAS ===================== -->
+    <section class="faixa-marcas" aria-label="Filtrar por marca">
+      <div class="container">
+        <div class="marcas" id="marcasChips"></div>
+      </div>
+    </section>
+
+    <!-- ===================== DESTAQUES ===================== -->
+    <section class="secao" id="destaques">
+      <div class="container">
+        <div class="secao__cab">
+          <span class="sobretitulo">Seleção da casa</span>
+          <h2>Destaques da semana</h2>
+        </div>
+        <div class="grade grade--destaques" id="gradeDestaques"></div>
+      </div>
+    </section>
+
+    <!-- ===================== CATÁLOGO ===================== -->
+    <section class="secao secao--escura" id="catalogo">
+      <div class="container">
+        <div class="secao__cab">
+          <span class="sobretitulo">Estoque completo</span>
+          <h2>Catálogo de motos</h2>
+        </div>
+
+        <form class="filtros" id="filtros" onsubmit="return false">
+          <div class="filtros__busca">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="fBusca" placeholder="Buscar por marca ou modelo..." aria-label="Buscar">
+          </div>
+          <label class="campo">
+            <span>Marca</span>
+            <select id="fMarca"><option value="">Todas</option></select>
+          </label>
+          <label class="campo">
+            <span>Categoria</span>
+            <select id="fCategoria"><option value="">Todas</option></select>
+          </label>
+          <label class="campo">
+            <span>Condição</span>
+            <select id="fCondicao">
+              <option value="">Todas</option>
+              <option value="Nova">0 km</option>
+              <option value="Seminova">Seminova</option>
+            </select>
+          </label>
+          <label class="campo">
+            <span>Preço até</span>
+            <select id="fPreco">
+              <option value="">Qualquer</option>
+              <option value="20000">R$ 20 mil</option>
+              <option value="30000">R$ 30 mil</option>
+              <option value="40000">R$ 40 mil</option>
+              <option value="60000">R$ 60 mil</option>
+            </select>
+          </label>
+          <label class="campo">
+            <span>Ordenar</span>
+            <select id="fOrdem">
+              <option value="recentes">Mais novas</option>
+              <option value="menor">Menor preço</option>
+              <option value="maior">Maior preço</option>
+              <option value="km">Menor km</option>
+            </select>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="fVendidas">
+            <span>Mostrar vendidas</span>
+          </label>
+        </form>
+
+        <div class="resultado">
+          <p id="contador" aria-live="polite"></p>
+          <button type="button" class="link-limpar" id="limparFiltros"><i class="fa-solid fa-xmark"></i> Limpar filtros</button>
+        </div>
+
+        <div class="grade" id="gradeCatalogo"></div>
+        <div class="vazio" id="vazio" hidden>
+          <i class="fa-solid fa-road-circle-xmark"></i>
+          <h3>Nenhuma moto encontrada</h3>
+          <p>Não achou o que procura? Fale com a gente — conseguimos a moto ideal para você.</p>
+          <a href="#" class="btn btn--ouro js-whats" data-msg="Olá! Estou procurando uma moto que não encontrei no catálogo do site." target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Encomendar minha moto</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FINANCIAMENTO ===================== -->
+    <section class="secao" id="financiamento">
+      <div class="container financ">
+        <div class="financ__texto">
+          <span class="sobretitulo">Facilitamos para você</span>
+          <h2>Simule seu financiamento</h2>
+          <p>Trabalhamos com os principais bancos e financeiras. Aprovação rápida, entrada facilitada e sua moto usada pode entrar como parte do pagamento.</p>
+          <ul class="lista-check">
+            <li><i class="fa-solid fa-check"></i> Até 48x no CDC ou consórcio</li>
+            <li><i class="fa-solid fa-check"></i> Aceitamos sua moto na troca</li>
+            <li><i class="fa-solid fa-check"></i> Análise de crédito em minutos</li>
+          </ul>
+        </div>
+
+        <div class="simulador cartao" id="simulador">
+          <label class="campo">
+            <span>Valor da moto</span>
+            <div class="input-moeda"><b>R$</b><input type="text" inputmode="numeric" id="sValor" value="30.000"></div>
+          </label>
+          <label class="campo">
+            <span>Entrada: <b id="sEntradaTxt"></b></span>
+            <input type="range" id="sEntrada" min="0" max="80" step="5" value="20">
+          </label>
+          <div class="campo">
+            <span>Prazo</span>
+            <div class="prazos" id="sPrazos" role="radiogroup" aria-label="Prazo">
+              <button type="button" data-n="12">12x</button>
+              <button type="button" data-n="24">24x</button>
+              <button type="button" data-n="36">36x</button>
+              <button type="button" data-n="48" class="ativo">48x</button>
+            </div>
+          </div>
+          <div class="simulador__res">
+            <span>Parcelas estimadas de</span>
+            <strong id="sParcela">R$ 0</strong>
+          </div>
+          <a href="#" class="btn btn--ouro btn--bloco" id="sEnviar" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Quero essa condição</a>
+          <small class="aviso">Simulação ilustrativa, sujeita a análise de crédito. Taxas e condições podem variar.</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SOBRE / DIFERENCIAIS ===================== -->
+    <section class="secao secao--escura" id="sobre">
+      <div class="container">
+        <div class="secao__cab">
+          <span class="sobretitulo">Por que a MT</span>
+          <h2>Excelência em duas rodas</h2>
+          <p class="secao__sub">Mais do que vender motos, entregamos tranquilidade. Cada moto do nosso estoque passa por vistoria completa antes de chegar até você.</p>
+        </div>
+        <div class="diferenciais">
+          <article class="dif">
+            <i class="fa-solid fa-magnifying-glass-chart"></i>
+            <h3>Vistoria completa</h3>
+            <p>Checagem mecânica, elétrica e de procedência em todas as motos.</p>
+          </article>
+          <article class="dif">
+            <i class="fa-solid fa-file-shield"></i>
+            <h3>Documentação em dia</h3>
+            <p>Transferência sem dor de cabeça, com toda a papelada resolvida.</p>
+          </article>
+          <article class="dif">
+            <i class="fa-solid fa-right-left"></i>
+            <h3>Aceitamos troca</h3>
+            <p>Avaliamos sua moto na hora e usamos o valor como entrada.</p>
+          </article>
+          <article class="dif">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <h3>Crédito facilitado</h3>
+            <p>Parceria com os principais bancos para a melhor taxa.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== VENDA SUA MOTO ===================== -->
+    <section class="secao">
+      <div class="container">
+        <div class="cta-venda cartao">
+          <div>
+            <span class="sobretitulo">Quer vender ou trocar?</span>
+            <h2>Avaliamos sua moto</h2>
+            <p>Envie os dados e receba uma proposta pelo WhatsApp.</p>
+          </div>
+          <form class="form-venda" id="formVenda">
+            <input required name="modelo" placeholder="Marca e modelo" aria-label="Marca e modelo">
+            <input required name="ano" inputmode="numeric" placeholder="Ano" aria-label="Ano">
+            <input name="km" inputmode="numeric" placeholder="Quilometragem" aria-label="Quilometragem">
+            <button class="btn btn--ouro" type="submit"><i class="fa-brands fa-whatsapp"></i> Solicitar avaliação</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CONTATO ===================== -->
+    <section class="secao secao--escura" id="contato">
+      <div class="container contato">
+        <div>
+          <span class="sobretitulo">Venha nos visitar</span>
+          <h2>Contato</h2>
+          <ul class="contato__lista">
+            <li><i class="fa-solid fa-location-dot"></i><div><b>Endereço</b><span id="cEndereco"></span><a id="cMapa" href="#" target="_blank" rel="noopener">Ver no mapa <i class="fa-solid fa-arrow-up-right-from-square"></i></a></div></li>
+            <li><i class="fa-brands fa-whatsapp"></i><div><b>WhatsApp</b><a href="#" class="js-whats" id="cFone" target="_blank" rel="noopener"></a></div></li>
+            <li><i class="fa-brands fa-instagram"></i><div><b>Instagram</b><a id="cInsta" href="#" target="_blank" rel="noopener"></a></div></li>
+            <li><i class="fa-regular fa-clock"></i><div><b>Horário de atendimento</b><span id="cHorarios"></span></div></li>
+          </ul>
+        </div>
+        <div class="contato__logo cartao">
+          <img src="img/logo-transparente.png" alt="MT Multimarcas">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="container rodape__inner">
+      <p>© <span id="ano"></span> MT Multimarcas — Excelência em duas rodas.</p>
+      <p class="rodape__aviso">Preços e disponibilidade sujeitos a alteração sem aviso prévio. Fotos meramente ilustrativas.</p>
+    </div>
+  </footer>
+
+  <!-- Botão flutuante WhatsApp -->
+  <a href="#" class="whats-flutuante js-whats" data-msg="Olá! Vim pelo site da MT Multimarcas." target="_blank" rel="noopener" aria-label="Conversar no WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <!-- ===================== MODAL DETALHES ===================== -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__fundo" data-fechar></div>
+    <div class="modal__caixa" role="dialog" aria-modal="true" aria-labelledby="mTitulo">
+      <button class="modal__fechar" data-fechar aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      <div class="modal__grid">
+        <div class="galeria">
+          <div class="galeria__principal" id="mFoto"></div>
+          <div class="galeria__miniaturas" id="mMiniaturas"></div>
+        </div>
+        <div class="modal__info">
+          <span class="modal__marca" id="mMarca"></span>
+          <h2 id="mTitulo"></h2>
+          <div class="modal__preco" id="mPreco"></div>
+          <ul class="ficha" id="mFicha"></ul>
+          <p id="mDescricao" class="modal__desc"></p>
+          <div id="mOpcionais"></div>
+          <div class="modal__acoes">
+            <a href="#" class="btn btn--ouro btn--bloco" id="mWhats" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> Tenho interesse</a>
+            <button type="button" class="btn btn--contorno btn--bloco" id="mCompartilhar"><i class="fa-solid fa-share-nodes"></i> Compartilhar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/dados.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
