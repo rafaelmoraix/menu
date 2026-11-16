@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-dark: #111827;
+  --color-beige: #f3f0e8;
+  --color-warm-white: #fffdf9;
+  --color-coral: #ff5c35;
+  --color-blue: #3157d5;
+  --color-green: #39a86b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  background: var(--color-dark);
+}
+
+body {
+  font-family: 'Geist', sans-serif;
+}
+
+.hero-heading {
+  background: linear-gradient(180deg, #fffdf9 0%, #f3f0e8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
