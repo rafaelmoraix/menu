@@ -11,43 +11,51 @@ Site estático (HTML + CSS + JavaScript puro, sem instalação) da **MT Multimar
 - **Simulador de financiamento** (entrada + 12/24/36/48x)
 - Formulário **"Avaliamos sua moto"**, que manda os dados pelo WhatsApp
 - Seções **Sobre** e **Contato** (endereço com link para o Google Maps, Instagram, horários)
+- **Painel admin** em `/admin` para cadastrar motos e fotos pelo celular
 - Layout responsivo (celular, tablet e computador) nas cores do logo, preto e dourado
 
-## Como atualizar
+## Painel admin (cadastro das motos)
 
-Tudo o que muda no dia a dia está em **`js/dados.js`**:
+Acesse **`/admin`** no endereço do site (ex.: `https://mt-multimarcas-catalogo.netlify.app/admin`) e entre com a senha.
 
-1. **Dados da loja** (`LOJA`): WhatsApp (só números, ex.: `5511999998888`), telefone, endereço, Instagram, horários e a taxa usada nas simulações.
-2. **Motos** (`MOTOS`): cada bloco `{ ... }` é uma moto.
-   - **Adicionar:** copie um bloco, cole e altere. O `id` precisa ser único (ex.: `"honda-cb-500f-2023"`).
-   - **Vendida:** mude `status` para `"vendida"`. A moto sai do catálogo e só aparece com o filtro "Mostrar vendidas".
-   - **Destaque:** `destaque: true` coloca a moto em "Destaques da semana" (no máximo 4 aparecem).
-   - **Fotos:** coloque as imagens em `img/motos/` e liste no campo `fotos`:
-     ```js
-     fotos: ["img/motos/cb500f-1.jpg", "img/motos/cb500f-2.jpg"],
-     ```
-     A primeira foto é a capa. Sem fotos, o site mostra uma ilustração automática. Use fotos na horizontal (proporção 4:3 ou 16:10).
+No painel dá para, inclusive pelo celular:
+- **Cadastrar moto** com fotos tiradas na hora ou da galeria (a primeira é a capa; a ⭐ troca a capa)
+- **Editar**, **excluir**, marcar como **vendida** ou como **destaque**
+- Buscar e filtrar entre "à venda" e "vendidas"
 
-> As motos que já estão no arquivo são **exemplos**. Troque pelos dados e preços reais do estoque.
+As mudanças aparecem no site na hora. As motos e as fotos ficam guardadas no **Netlify Blobs** do próprio site.
+
+**Senha:** fica na variável de ambiente `ADMIN_PASSWORD` do projeto na Netlify
+(Project configuration → Environment variables). Para trocar, altere o valor e publique o site de novo.
+Trocar a senha desconecta quem estiver logado. O login é limitado a 10 tentativas por minuto.
+
+## Dados da loja
+
+WhatsApp, telefone, endereço, Instagram, horários e a taxa da simulação ficam em **`site/js/dados.js`** (objeto `LOJA`).
+As motos que estão nesse arquivo (`MOTOS`) são só **exemplos**: aparecem enquanto nada for salvo no painel.
 
 ## Link direto para uma moto
 
-Cada moto tem um link próprio para mandar a clientes: `index.html#moto=<id>`.
+Cada moto tem um link próprio para mandar a clientes: `/#moto=<id>`.
 O botão **Compartilhar** na página da moto já copia esse link.
-
-## Como ver e publicar
-
-- **Ver no computador:** dê dois cliques em `index.html`.
-- **Publicar grátis:** envie a pasta `mt-multimarcas` para o **Netlify** (arraste a pasta em app.netlify.com/drop) ou ative o **GitHub Pages** neste repositório.
 
 ## Estrutura
 
 ```
 mt-multimarcas/
-├── index.html            página do site
-├── css/style.css         visual
-├── js/dados.js           ← EDITE AQUI: loja e motos
-├── js/app.js             funcionamento (filtros, modal, simulador)
-├── img/                  logos (e a pasta motos/ para as fotos)
-└── vendor/fontawesome/   ícones (incluídos para funcionar sem internet)
+├── site/                     o que vai para o ar
+│   ├── index.html            página do site
+│   ├── admin/                painel admin (index.html, admin.css, admin.js)
+│   ├── css/ js/ img/         visual, scripts (dados.js = dados da loja) e logos
+│   └── vendor/fontawesome/   ícones
+├── netlify/
+│   ├── functions/            API: /api/login, /api/motos, /api/fotos e /fotos/*
+│   └── lib/                  login (token assinado) e validação das motos
+├── netlify.toml              configuração da Netlify
+└── package.json
 ```
+
+## Publicar
+
+O site está na Netlify (projeto `mt-multimarcas-catalogo`). Ele precisa da Netlify por causa do painel:
+funções + Blobs. Abrir o `site/index.html` direto no computador mostra só as motos de exemplo.

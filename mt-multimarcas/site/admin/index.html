@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0b0907">
+  <title>Painel MT Multimarcas</title>
+  <link rel="icon" type="image/png" href="../img/logo-mark.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+
+  <!-- ============ LOGIN ============ -->
+  <section class="login" id="telaLogin" hidden>
+    <form class="login__caixa cartao" id="formLogin">
+      <img src="../img/logo-transparente.png" alt="MT Multimarcas" class="login__logo">
+      <h1>Painel da loja</h1>
+      <p>Entre com a senha para cadastrar e editar as motos do catálogo.</p>
+      <label class="campo">
+        <span>Senha</span>
+        <div class="senha">
+          <input type="password" id="senha" autocomplete="current-password" required>
+          <button type="button" id="verSenha" aria-label="Mostrar senha"><i class="fa-regular fa-eye"></i></button>
+        </div>
+      </label>
+      <p class="erro" id="erroLogin" role="alert"></p>
+      <button class="btn btn--ouro btn--bloco" type="submit" id="btnEntrar"><i class="fa-solid fa-right-to-bracket"></i> Entrar</button>
+      <a href="../" class="voltar"><i class="fa-solid fa-arrow-left"></i> Voltar ao site</a>
+    </form>
+  </section>
+
+  <!-- ============ PAINEL ============ -->
+  <div id="telaPainel" hidden>
+    <header class="topo">
+      <div class="container topo__inner">
+        <a href="../" class="marca" target="_blank" rel="noopener">
+          <img src="../img/logo-mark.png" alt="" class="marca__img">
+          <span class="marca__txt adm-titulo">PAINEL</span>
+        </a>
+        <div class="adm-topo-acoes">
+          <a href="../" target="_blank" rel="noopener" class="btn btn--contorno btn--sm"><i class="fa-solid fa-eye"></i> <span>Ver site</span></a>
+          <button class="btn btn--contorno btn--sm" id="btnSair"><i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span></button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container adm">
+      <div class="aviso-exemplos cartao" id="avisoExemplos" hidden>
+        <i class="fa-solid fa-circle-info"></i>
+        <div>
+          <b>Estas motos são exemplos.</b>
+          <span>Edite ou apague cada uma e cadastre o estoque real. O site só passa a usar esta lista depois do primeiro salvamento.</span>
+        </div>
+        <button class="btn btn--contorno btn--sm" id="btnApagarExemplos"><i class="fa-solid fa-trash"></i> Apagar todos os exemplos</button>
+      </div>
+
+      <div class="adm-resumo">
+        <div class="resumo cartao"><strong id="rDisp">0</strong><span>à venda</span></div>
+        <div class="resumo cartao"><strong id="rVend">0</strong><span>vendidas</span></div>
+        <div class="resumo cartao"><strong id="rDest">0</strong><span>em destaque</span></div>
+      </div>
+
+      <div class="adm-barra">
+        <div class="filtros__busca">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="search" id="busca" placeholder="Buscar moto..." aria-label="Buscar moto">
+        </div>
+        <div class="abas" role="tablist" id="abas">
+          <button class="ativo" data-f="todas">Todas</button>
+          <button data-f="disponivel">À venda</button>
+          <button data-f="vendida">Vendidas</button>
+        </div>
+        <button class="btn btn--ouro" id="btnNova"><i class="fa-solid fa-plus"></i> Nova moto</button>
+      </div>
+
+      <ul class="lista" id="lista"></ul>
+      <div class="vazio" id="listaVazia" hidden>
+        <i class="fa-solid fa-motorcycle"></i>
+        <h3>Nenhuma moto aqui</h3>
+        <p>Toque em <b>Nova moto</b> para cadastrar a primeira.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============ FORMULÁRIO DA MOTO ============ -->
+  <div class="modal" id="modalForm" hidden>
+    <div class="modal__fundo" data-fechar></div>
+    <form class="modal__caixa form-moto" id="formMoto" novalidate role="dialog" aria-modal="true" aria-labelledby="tituloForm">
+      <div class="form-moto__cab">
+        <h2 id="tituloForm">Nova moto</h2>
+        <button type="button" class="modal__fechar" data-fechar aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="form-moto__corpo">
+        <fieldset>
+          <legend>Fotos</legend>
+          <div class="fotos" id="fotos"></div>
+          <p class="dica">A primeira foto é a capa. Toque na <i class="fa-solid fa-star"></i> para escolher a capa.</p>
+        </fieldset>
+
+        <fieldset class="grade-form">
+          <legend>Dados da moto</legend>
+          <label class="campo"><span>Marca *</span><input name="marca" list="listaMarcas" required autocomplete="off"></label>
+          <label class="campo"><span>Modelo *</span><input name="modelo" required placeholder="Ex.: CB 500F"></label>
+          <label class="campo"><span>Ano *</span><input name="ano" type="number" inputmode="numeric" min="1950" max="2100" required></label>
+          <label class="campo"><span>Preço (R$) *</span><input name="preco" inputmode="numeric" required placeholder="Ex.: 32.900" data-moeda></label>
+          <label class="campo"><span>Km</span><input name="km" inputmode="numeric" placeholder="0" data-moeda></label>
+          <label class="campo"><span>Cilindrada (cc)</span><input name="cilindrada" type="number" inputmode="numeric" min="0"></label>
+          <label class="campo"><span>Cor</span><input name="cor"></label>
+          <label class="campo"><span>Categoria</span>
+            <select name="categoria">
+              <option>Street</option><option>Naked</option><option>Trail</option><option>Big Trail</option>
+              <option>Esportiva</option><option>Scooter</option><option>Custom</option><option>Touring</option>
+              <option>Off-road</option><option>Ciclomotor</option><option>Elétrica</option>
+            </select>
+          </label>
+          <label class="campo"><span>Condição</span>
+            <select name="condicao"><option value="Seminova">Seminova</option><option value="Nova">0 km (nova)</option></select>
+          </label>
+          <label class="campo"><span>Combustível</span>
+            <select name="combustivel"><option>Gasolina</option><option>Flex</option><option>Elétrica</option></select>
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Anúncio</legend>
+          <label class="campo"><span>Opcionais <small>(separe por vírgula)</small></span>
+            <input name="opcionais" placeholder="Ex.: ABS, Manual e chave reserva, Pneus novos"></label>
+          <label class="campo"><span>Descrição</span>
+            <textarea name="descricao" rows="3" placeholder="Conte o estado da moto, revisões, único dono..."></textarea></label>
+          <div class="chaves">
+            <label class="chave"><input type="checkbox" name="destaque"><span></span> Destaque na página inicial</label>
+            <label class="chave"><input type="checkbox" name="vendida"><span></span> Moto vendida</label>
+          </div>
+        </fieldset>
+        <p class="erro" id="erroForm" role="alert"></p>
+      </div>
+
+      <div class="form-moto__rodape">
+        <button type="button" class="btn btn--contorno" data-fechar>Cancelar</button>
+        <button type="submit" class="btn btn--ouro" id="btnSalvar"><i class="fa-solid fa-check"></i> Salvar moto</button>
+      </div>
+    </form>
+  </div>
+
+  <datalist id="listaMarcas">
+    <option>Honda</option><option>Yamaha</option><option>Suzuki</option><option>Kawasaki</option>
+    <option>BMW</option><option>Triumph</option><option>Harley-Davidson</option><option>Ducati</option>
+    <option>KTM</option><option>Royal Enfield</option><option>Dafra</option><option>Haojue</option>
+    <option>Shineray</option><option>Kasinski</option><option>Mottu</option><option>Voltz</option>
+  </datalist>
+
+  <input type="file" id="inputFotos" accept="image/*" multiple hidden>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="../js/dados.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

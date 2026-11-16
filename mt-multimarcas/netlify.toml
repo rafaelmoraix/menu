@@ -1,3 +1,13 @@
 [build]
-  publish = "."
+  publish = "site"
   command = ""
+
+[functions]
+  directory = "netlify/functions"
+
+# Painel admin nunca deve ser indexado nem guardado em cache
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+    Cache-Control = "no-store"

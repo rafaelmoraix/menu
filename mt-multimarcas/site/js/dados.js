@@ -1,16 +1,12 @@
 /* =========================================================================
    MT MULTIMARCAS — DADOS DO SITE
    -------------------------------------------------------------------------
-   Este é o ÚNICO arquivo que você precisa editar para atualizar o site.
-
    1) LOJA: troque telefone/WhatsApp, endereço, horários e redes sociais.
-   2) MOTOS: cada bloco { ... } dentro de MOTOS é uma moto do catálogo.
-      - Para adicionar: copie um bloco inteiro, cole e altere os dados.
-      - Para remover: apague o bloco.
-      - Para marcar como vendida: status: "vendida".
-      - Fotos: coloque os arquivos na pasta img/motos/ e liste em fotos:
-          fotos: ["img/motos/cb500f-1.jpg", "img/motos/cb500f-2.jpg"]
-        Sem fotos, o site mostra uma ilustração automática.
+
+   2) MOTOS: o estoque agora é cadastrado pelo PAINEL ADMIN do site
+      (endereço-do-site/admin). A lista abaixo são só EXEMPLOS: aparecem
+      enquanto nenhuma moto for salva pelo painel, e são carregados no
+      painel na primeira vez para você editar ou apagar.
    ========================================================================= */
 
 const LOJA = {

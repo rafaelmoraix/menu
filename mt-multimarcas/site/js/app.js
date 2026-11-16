@@ -5,6 +5,19 @@
 (() => {
   "use strict";
 
+  // Estoque: vem do painel admin (/api/motos). Se o painel ainda não foi usado
+  // ou o site estiver aberto direto do computador, usa os exemplos de dados.js.
+  let estoque = MOTOS;
+
+  async function carregarEstoque() {
+    try {
+      const r = await fetch("/api/motos", { cache: "no-store" });
+      if (!r.ok) return;
+      const { motos } = await r.json();
+      if (Array.isArray(motos)) estoque = motos;
+    } catch (_) { /* sem servidor: mantém os exemplos */ }
+  }
+
   const $ = (sel, el = document) => el.querySelector(sel);
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 
@@ -137,8 +150,8 @@
   };
 
   const normalizar = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  const unicos = (campo) => [...new Set(MOTOS.map((m) => m[campo]))].sort((a, b) => a.localeCompare(b, "pt-BR"));
-  const disponiveis = () => MOTOS.filter((m) => m.status !== "vendida");
+  const unicos = (campo) => [...new Set(estoque.map((m) => m[campo]))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const disponiveis = () => estoque.filter((m) => m.status !== "vendida");
 
   function preencherSelects() {
     unicos("marca").forEach((v) => f.marca.add(new Option(v, v)));
@@ -169,7 +182,7 @@
   function aplicar() {
     const termo = normalizar(f.busca.value.trim());
     const max = Number(f.preco.value) || Infinity;
-    let lista = MOTOS.filter((m) =>
+    let lista = estoque.filter((m) =>
       (f.vendidas.checked || m.status !== "vendida") &&
       (!f.marca.value || m.marca === f.marca.value) &&
       (!f.categoria.value || m.categoria === f.categoria.value) &&
@@ -204,7 +217,7 @@
   let ultimoFoco = null;
 
   function abrirModal(id, atualizarHash = true) {
-    const m = MOTOS.find((x) => x.id === id);
+    const m = estoque.find((x) => x.id === id);
     if (!m) return;
     ultimoFoco = document.activeElement;
     const vendida = m.status === "vendida";
@@ -346,7 +359,8 @@
   }
 
   /* ---------- Inicialização ---------- */
-  function init() {
+  async function init() {
+    await carregarEstoque();
     preencherSelects();
     chipsMarcas();
 
@@ -378,7 +392,7 @@
     menu();
 
     contar($("#numEstoque"), disponiveis().length);
-    contar($("#numMarcas"), new Set(MOTOS.map((m) => m.marca)).size);
+    contar($("#numMarcas"), new Set(estoque.map((m) => m.marca)).size);
 
     // Link direto para uma moto: index.html#moto=<id>
     const abrirPeloHash = () => {
