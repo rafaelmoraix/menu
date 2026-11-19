@@ -45,7 +45,9 @@ async function serpapi(caminho: string, params: Record<string, string>) {
   if (!r.ok || dados.error) {
     const msg = String(dados.error || `HTTP ${r.status}`)
     if (/run out of searches|plan|limit/i.test(msg)) throw Object.assign(new Error("As buscas grátis do mês acabaram. Use os botões de atalho até o mês virar."), { status: 429 })
-    if (/invalid api key/i.test(msg) || r.status === 401) throw Object.assign(new Error("Chave do SerpAPI inválida. Confira a BUSCA_API_KEY na Netlify."), { status: 500 })
+    if (/invalid api key/i.test(msg) || r.status === 401) {
+      throw Object.assign(new Error(`Chave do SerpAPI recusada (resposta do SerpAPI: "${msg.slice(0, 160)}"). Confira a BUSCA_API_KEY na Netlify.`), { status: 500 })
+    }
     throw Object.assign(new Error(`O serviço de busca falhou: ${msg}`), { status: 502 })
   }
   return dados
@@ -53,7 +55,8 @@ async function serpapi(caminho: string, params: Record<string, string>) {
 
 export default async (req: Request) => {
   if (!autorizado(req)) return naoAutorizado()
-  const chave = Netlify.env.get("BUSCA_API_KEY")
+  // Remove espaços, aspas e quebras de linha que vêm junto ao colar a chave
+  const chave = (Netlify.env.get("BUSCA_API_KEY") || "").trim().replace(/^["']|["']$/g, "").trim()
   if (!chave) return erro("A busca na internet ainda não foi ativada (falta a chave do SerpAPI).", 501, { semChave: true })
 
   const p = new URL(req.url).searchParams
