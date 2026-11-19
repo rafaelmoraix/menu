@@ -4,10 +4,22 @@ import { createHash } from "node:crypto"
 import { autorizado, naoAutorizado } from "../lib/auth.mts"
 
 // GET /api/busca?modelo=fazer 250&ano=2019&precoMax=15000&uf=SP&recentes=1
-//   -> anúncios encontrados na internet (via SerpAPI / Google), só para o admin
+//   -> anúncios encontrados na internet (via SerpAPI ou SearchApi / Google), só para o admin
 // GET /api/busca?conta=1  -> quantas buscas restam no mês (não gasta busca)
 
-const BASE = () => Netlify.env.get("BUSCA_API_BASE") || "https://serpapi.com"
+// Funciona com SerpAPI (chave de 64 caracteres) ou SearchApi.io (outras chaves).
+// O serviço é descoberto pelo formato da chave; BUSCA_PROVEDOR força um dos dois.
+type Provedor = "serpapi" | "searchapi"
+function provedor(chave: string): Provedor {
+  const forcado = (Netlify.env.get("BUSCA_PROVEDOR") || "").toLowerCase()
+  if (forcado === "serpapi" || forcado === "searchapi") return forcado
+  return /^[a-f0-9]{64}$/i.test(chave) ? "serpapi" : "searchapi"
+}
+const NOMES: Record<Provedor, string> = { serpapi: "SerpAPI", searchapi: "SearchApi" }
+const ROTAS: Record<Provedor, { base: string; busca: string; conta: string }> = {
+  serpapi: { base: "https://serpapi.com", busca: "/search.json", conta: "/account.json" },
+  searchapi: { base: "https://www.searchapi.io", busca: "/api/v1/search", conta: "/api/v1/me" },
+}
 const CACHE_MS = 6 * 60 * 60 * 1000 // repete a mesma busca por 6h sem gastar cota
 const SITES = ["olx.com.br", "mercadolivre.com.br", "webmotors.com.br", "mobiauto.com.br", "icarros.com.br", "facebook.com"]
 
@@ -37,18 +49,22 @@ function nomeSite(host: string): string {
   return host.replace(/^www\./, "")
 }
 
-async function serpapi(caminho: string, params: Record<string, string>) {
-  const url = new URL(caminho, BASE())
+async function chamar(prov: Provedor, tipo: "busca" | "conta", params: Record<string, string>) {
+  const rota = ROTAS[prov]
+  const url = new URL(rota[tipo], Netlify.env.get("BUSCA_API_BASE") || rota.base)
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
   const r = await fetch(url, { signal: AbortSignal.timeout(20000) })
   const dados: any = await r.json().catch(() => ({}))
   if (!r.ok || dados.error) {
     const msg = String(dados.error || `HTTP ${r.status}`)
-    if (/run out of searches|plan|limit/i.test(msg)) throw Object.assign(new Error("As buscas grátis do mês acabaram. Use os botões de atalho até o mês virar."), { status: 429 })
-    if (/invalid api key/i.test(msg) || r.status === 401) {
-      throw Object.assign(new Error(`Chave do SerpAPI recusada (resposta do SerpAPI: "${msg.slice(0, 160)}"). Confira a BUSCA_API_KEY na Netlify.`), { status: 500 })
+    const nome = NOMES[prov]
+    if (r.status === 429 || /run out of|credits|limit|quota/i.test(msg)) {
+      throw Object.assign(new Error(`As buscas grátis do ${nome} acabaram. Use os botões de atalho enquanto isso.`), { status: 429 })
     }
-    throw Object.assign(new Error(`O serviço de busca falhou: ${msg}`), { status: 502 })
+    if (r.status === 401 || /invalid api key|unauthori/i.test(msg)) {
+      throw Object.assign(new Error(`Chave do ${nome} recusada (resposta do ${nome}: "${msg.slice(0, 160)}"). Confira a BUSCA_API_KEY na Netlify.`), { status: 500 })
+    }
+    throw Object.assign(new Error(`O ${nome} falhou: ${msg.slice(0, 200)}`), { status: 502 })
   }
   return dados
 }
@@ -57,16 +73,19 @@ export default async (req: Request) => {
   if (!autorizado(req)) return naoAutorizado()
   // Remove espaços, aspas e quebras de linha que vêm junto ao colar a chave
   const chave = (Netlify.env.get("BUSCA_API_KEY") || "").trim().replace(/^["']|["']$/g, "").trim()
-  if (!chave) return erro("A busca na internet ainda não foi ativada (falta a chave do SerpAPI).", 501, { semChave: true })
+  if (!chave) return erro("A busca na internet ainda não foi ativada (falta a chave do serviço de busca).", 501, { semChave: true })
+  const prov = provedor(chave)
 
   const p = new URL(req.url).searchParams
   try {
     if (p.get("conta")) {
-      const c = await serpapi("/account.json", { api_key: chave })
+      const c = await chamar(prov, "conta", { api_key: chave })
+      const a = c.account || c
       return Response.json({
-        restantes: c.total_searches_left ?? c.plan_searches_left ?? null,
-        usadas: c.this_month_usage ?? null,
-        limite: c.searches_per_month ?? null,
+        servico: NOMES[prov],
+        restantes: a.total_searches_left ?? a.plan_searches_left ?? a.remaining_credits ?? null,
+        usadas: a.this_month_usage ?? a.current_month_usage ?? null,
+        limite: a.searches_per_month ?? a.monthly_allowance ?? null,
       })
     }
 
@@ -82,7 +101,7 @@ export default async (req: Request) => {
 
     // Cache: a mesma busca nas últimas 6h não gasta cota
     const cache = getStore("busca-cache")
-    const id = createHash("sha256").update(JSON.stringify([q, recentes])).digest("hex").slice(0, 32)
+    const id = createHash("sha256").update(JSON.stringify([prov, q, recentes])).digest("hex").slice(0, 32)
     const guardado: any = await cache.get(id, { type: "json" })
     let resultados: any[]
     let doCache = false
@@ -90,9 +109,9 @@ export default async (req: Request) => {
       resultados = guardado.resultados
       doCache = true
     } else {
-      const dados = await serpapi("/search.json", {
+      const dados = await chamar(prov, "busca", {
         engine: "google", q, api_key: chave, google_domain: "google.com.br", gl: "br", hl: "pt-br", num: "20",
-        ...(recentes ? { tbs: "qdr:m" } : {}),
+        ...(recentes ? (prov === "serpapi" ? { tbs: "qdr:m" } : { time_period: "last_month" }) : {}),
       })
       resultados = (dados.organic_results || []).map((r: any) => {
         const texto = `${r.title || ""} ${r.snippet || ""} ${(r.rich_snippet?.top?.extensions || []).join(" ")}`
@@ -105,7 +124,7 @@ export default async (req: Request) => {
           trecho: String(r.snippet || "").slice(0, 300),
           preco: r.rich_snippet?.top?.detected_extensions?.price ?? lerPreco(texto),
           data: r.date || null,
-          foto: typeof r.thumbnail === "string" ? r.thumbnail : null,
+          foto: typeof r.thumbnail === "string" && /^(https:|data:image\/)/.test(r.thumbnail) ? r.thumbnail : null,
         }
       }).filter((r: any) => /^https:\/\//.test(r.url))
       await cache.setJSON(id, { em: Date.now(), resultados })

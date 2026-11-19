@@ -483,7 +483,7 @@
   async function atualizarCota() {
     try {
       const c = await api("/api/busca?conta=1");
-      $("#cota").textContent = c.restantes != null ? `${c.restantes} buscas restantes no mês` : "";
+      $("#cota").textContent = c.restantes != null ? `${c.restantes} buscas restantes${c.servico ? " (" + c.servico + ")" : ""}` : "";
     } catch (_) { $("#cota").textContent = ""; }
   }
 

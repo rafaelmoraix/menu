@@ -34,7 +34,8 @@ Trocar a senha desconecta quem estiver logado. O login é limitado a 10 tentativ
 - Digite modelo, ano, preço máximo e estado.
 - **Já tem na sua loja:** mostra motos parecidas do próprio estoque.
 - **Botões de atalho** (OLX, Marketplace, Mercado Livre, Google): abrem a busca pronta no site. Não gastam cota.
-- **Anúncios encontrados na internet:** resultados do Google via **SerpAPI** (plano grátis, cerca de 250 buscas/mês).
+- **Anúncios encontrados na internet:** resultados do Google via **SearchApi** (searchapi.io) ou **SerpAPI**.
+  O painel descobre o serviço pelo formato da chave (a do SerpAPI tem 64 caracteres; a variável `BUSCA_PROVEDOR` força um dos dois).
   A mesma busca repetida em até 6 horas não gasta cota. A chave fica na variável `BUSCA_API_KEY` da Netlify.
 - **Procuras:** salve o pedido do cliente (nome e WhatsApp) e repita a busca depois com um toque.
 
