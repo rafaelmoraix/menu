@@ -1,25 +1,30 @@
 import type { Config } from "@netlify/functions"
-import { autorizado, login } from "../lib/auth.mts"
+import { autorizado, equipe, login } from "../lib/auth.mts"
 
-// POST /api/login  { senha }  -> { token }
-// GET  /api/login             -> confere se o token enviado ainda vale
+// POST /api/login  { usuario, senha } -> { token, usuario }
+// GET  /api/login                     -> confere o token enviado -> { usuario }
+// GET  /api/login?equipe=1            -> nomes da equipe para a tela de login
 export default async (req: Request) => {
   if (req.method === "GET") {
-    return autorizado(req)
-      ? Response.json({ ok: true })
+    if (new URL(req.url).searchParams.get("equipe")) {
+      return Response.json({ equipe: equipe().map(({ id, nome }) => ({ id, nome })) })
+    }
+    const u = autorizado(req)
+    return u
+      ? Response.json({ ok: true, usuario: u })
       : Response.json({ erro: "Sessão expirada. Entre novamente." }, { status: 401 })
   }
 
-  let senha: unknown
-  try { senha = (await req.json())?.senha } catch { /* corpo inválido */ }
-  const token = login(senha)
-  if (!token) return Response.json({ erro: "Senha incorreta." }, { status: 401 })
-  return Response.json({ token })
+  let corpo: any = {}
+  try { corpo = await req.json() } catch { /* corpo inválido */ }
+  const r = login(corpo?.usuario, corpo?.senha)
+  if (!r) return Response.json({ erro: "Usuário ou senha incorretos." }, { status: 401 })
+  return Response.json(r)
 }
 
 export const config: Config = {
   path: "/api/login",
   method: ["GET", "POST"],
   // Freia tentativas de adivinhar a senha
-  rateLimit: { windowLimit: 10, windowSize: 60, aggregateBy: ["ip", "domain"] },
+  rateLimit: { windowLimit: 20, windowSize: 60, aggregateBy: ["ip", "domain"] },
 }

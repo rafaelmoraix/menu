@@ -39,6 +39,35 @@ Trocar a senha desconecta quem estiver logado. O login é limitado a 10 tentativ
   A mesma busca repetida em até 6 horas não gasta cota. A chave fica na variável `BUSCA_API_KEY` da Netlify.
 - **Procuras:** salve o pedido do cliente (nome e WhatsApp) e repita a busca depois com um toque.
 
+## Atendimento (CRM de WhatsApp) — aba "Atendimento" do painel
+
+- Cada pessoa entra com **seu usuário**: Gerente (`ADMIN_PASSWORD`) e atendentes (`ATENDENTES`, JSON
+  `[{"id":"marx","nome":"Marx","senha":"..."}]`). Trocar a senha de alguém desconecta essa pessoa.
+- Conversa chega em **Novas** para todos. Quem toca em **Assumir** fica dono; os outros veem
+  "Fulano está atendendo" e não conseguem responder (o servidor também bloqueia). Dono ou gerente
+  podem **transferir** ou **liberar**. Etapas: novo → em atendimento → proposta → vendido/perdido.
+- Notas internas do cliente, respostas rápidas, enviar moto do estoque com link, aviso sonoro de
+  conversa nova, resumo por atendente.
+- **Modo demonstração** (enquanto o WhatsApp não está ligado): conversas de teste num armazenamento
+  separado, botão "Simular cliente" e, para o gerente, "Reiniciar".
+
+### Ligar o WhatsApp oficial (Meta Cloud API, modo coexistência)
+
+Variáveis na Netlify (depois, publicar de novo):
+
+| Variável | O que é |
+|---|---|
+| `WHATSAPP_TOKEN` | Token permanente (usuário do sistema no Meta Business) |
+| `WHATSAPP_PHONE_ID` | "Phone number ID" do número da loja |
+| `WHATSAPP_APP_SECRET` | "App secret" do app na Meta (confere a assinatura do webhook) |
+| `WHATSAPP_VERIFY_TOKEN` | Já criado; colar o mesmo valor no campo "Verify token" da Meta |
+| `WHATSAPP_API_VERSION` | Opcional (padrão `v23.0`) |
+
+Webhook para cadastrar na Meta: `https://mt-multimarcas-catalogo.netlify.app/api/whatsapp/webhook`
+(assinar os campos **messages** e, na coexistência, **smb_message_echoes**).
+Com `WHATSAPP_TOKEN` e `WHATSAPP_PHONE_ID` preenchidos, o modo demonstração some e as conversas
+reais passam a aparecer.
+
 ## Dados da loja
 
 WhatsApp, telefone, endereço, Instagram, horários e a taxa da simulação ficam em **`site/js/dados.js`** (objeto `LOJA`).
@@ -59,7 +88,7 @@ mt-multimarcas/
 │   ├── css/ js/ img/         visual, scripts (dados.js = dados da loja) e logos
 │   └── vendor/fontawesome/   ícones
 ├── netlify/
-│   ├── functions/            API: /api/login, /api/motos, /api/fotos, /fotos/*, /api/busca, /api/procuras
+│   ├── functions/            API: login, motos, fotos, busca, procuras, conversas e /api/whatsapp/webhook
 │   └── lib/                  login (token assinado) e validação das motos
 ├── netlify.toml              configuração da Netlify
 └── package.json

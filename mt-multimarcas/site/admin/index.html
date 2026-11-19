@@ -21,7 +21,8 @@
     <form class="login__caixa cartao" id="formLogin">
       <img src="../img/logo-transparente.png" alt="MT Multimarcas" class="login__logo">
       <h1>Painel da loja</h1>
-      <p>Entre com a senha para cadastrar e editar as motos do catálogo.</p>
+      <p>Escolha quem você é e digite sua senha.</p>
+      <div class="quem" id="quemSou" role="radiogroup" aria-label="Quem é você"></div>
       <label class="campo">
         <span>Senha</span>
         <div class="senha">
@@ -44,6 +45,7 @@
           <span class="marca__txt adm-titulo">PAINEL</span>
         </a>
         <div class="adm-topo-acoes">
+          <span class="eu" id="euNome"></span>
           <a href="../" target="_blank" rel="noopener" class="btn btn--contorno btn--sm"><i class="fa-solid fa-eye"></i> <span>Ver site</span></a>
           <button class="btn btn--contorno btn--sm" id="btnSair"><i class="fa-solid fa-right-from-bracket"></i> <span>Sair</span></button>
         </div>
@@ -51,12 +53,75 @@
     </header>
 
     <nav class="container menu-adm" id="menuAdm" role="tablist">
-      <button class="ativo" data-aba="estoque" role="tab"><i class="fa-solid fa-motorcycle"></i> Estoque</button>
+      <button class="ativo" data-aba="atendimento" role="tab"><i class="fa-brands fa-whatsapp"></i> Atendimento <b id="nAtend"></b></button>
+      <button data-aba="estoque" role="tab"><i class="fa-solid fa-motorcycle"></i> Estoque</button>
       <button data-aba="busca" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Buscar moto</button>
       <button data-aba="procuras" role="tab"><i class="fa-solid fa-clipboard-list"></i> Procuras <b id="nProcuras"></b></button>
     </nav>
 
-    <main class="container adm" id="abaEstoque">
+    <!-- ============ ATENDIMENTO (CRM WhatsApp) ============ -->
+    <main class="container adm atend" id="abaAtendimento">
+      <div class="aviso-demo cartao" id="avisoDemo" hidden>
+        <i class="fa-solid fa-flask"></i>
+        <div>
+          <b>Modo demonstração</b>
+          <span>Conversas de teste: nada é enviado ao WhatsApp. Quando a conta da Meta for ligada, as conversas reais do número da loja aparecem aqui.</span>
+        </div>
+        <div class="aviso-demo__acoes">
+          <button class="btn btn--ouro btn--sm" id="btnSimular"><i class="fa-solid fa-comment-dots"></i> Simular cliente</button>
+          <button class="btn btn--contorno btn--sm" id="btnReiniciarDemo" hidden><i class="fa-solid fa-rotate"></i> Reiniciar</button>
+        </div>
+      </div>
+
+      <div class="equipe" id="equipeResumo"></div>
+
+      <div class="atend-grid" id="atendGrid">
+        <section class="atend-lista cartao">
+          <div class="abas abas--conv" id="filtroConv">
+            <button class="ativo" data-f="novas">Novas <b id="cNovas"></b></button>
+            <button data-f="minhas">Minhas <b id="cMinhas"></b></button>
+            <button data-f="todas">Todas</button>
+          </div>
+          <div class="filtros__busca">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" id="buscaConv" placeholder="Buscar cliente ou telefone..." aria-label="Buscar conversa">
+          </div>
+          <ul class="convs" id="listaConv"></ul>
+        </section>
+
+        <section class="atend-chat cartao">
+          <div class="chat-vazio" id="chatVazio">
+            <i class="fa-brands fa-whatsapp"></i>
+            <p>Escolha uma conversa ao lado</p>
+          </div>
+          <div class="chat" id="chatAberto" hidden>
+            <header class="chat__cab">
+              <button type="button" class="icone chat__voltar" id="chatVoltar" aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
+              <div class="avatar" id="chatAvatar"></div>
+              <div class="chat__quem"><h3 id="chatNome"></h3><span id="chatTel"></span></div>
+              <a class="icone icone--whats" id="chatAbrirWhats" href="#" target="_blank" rel="noopener" title="Abrir no WhatsApp" aria-label="Abrir no WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+              <button type="button" class="icone" id="chatNotasBtn" title="Notas do cliente" aria-label="Notas do cliente"><i class="fa-solid fa-note-sticky"></i></button>
+            </header>
+            <div class="chat__barra" id="chatBarra"></div>
+            <div class="chat__notas" id="chatNotas" hidden>
+              <label class="campo"><span>Notas sobre o cliente (só a equipe vê)</span>
+                <textarea id="notas" rows="3" placeholder="Ex.: quer XRE 300, entrada de R$ 8 mil, prefere branca"></textarea></label>
+              <button type="button" class="btn btn--contorno btn--sm" id="salvarNotas"><i class="fa-solid fa-floppy-disk"></i> Salvar notas</button>
+            </div>
+            <div class="chat__msgs" id="chatMsgs"></div>
+            <div class="chat__aviso" id="chat24h" hidden></div>
+            <div class="rapidas" id="rapidas"></div>
+            <form class="chat__envio" id="formEnvio">
+              <button type="button" class="icone" id="btnMotoChat" title="Enviar moto do estoque" aria-label="Enviar moto do estoque"><i class="fa-solid fa-motorcycle"></i></button>
+              <textarea id="txtEnvio" rows="1" placeholder="Escreva uma mensagem..." aria-label="Mensagem"></textarea>
+              <button class="btn btn--ouro chat__enviar" type="submit" id="btnEnviar" aria-label="Enviar"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <main class="container adm" id="abaEstoque" hidden>
       <div class="aviso-exemplos cartao" id="avisoExemplos" hidden>
         <i class="fa-solid fa-circle-info"></i>
         <div>
@@ -213,6 +278,36 @@
         <button type="submit" class="btn btn--ouro" id="btnSalvar"><i class="fa-solid fa-check"></i> Salvar moto</button>
       </div>
     </form>
+  </div>
+
+  <div class="modal" id="modalSimular" hidden>
+    <div class="modal__fundo" data-fechar-sim></div>
+    <form class="modal__caixa mini" id="formSimular" role="dialog" aria-modal="true" aria-labelledby="tituloSim">
+      <div class="form-moto__cab">
+        <h2 id="tituloSim">Simular mensagem de cliente</h2>
+        <button type="button" class="modal__fechar" data-fechar-sim aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-moto__corpo">
+        <p class="dica">Mostra como uma mensagem chega da loja: ela aparece em <b>Novas</b> para todos, até alguém assumir.</p>
+        <label class="campo"><span>Nome do cliente</span><input name="nome" required></label>
+        <label class="campo"><span>Mensagem</span><textarea name="texto" rows="3" required></textarea></label>
+      </div>
+      <div class="form-moto__rodape">
+        <button type="button" class="btn btn--contorno" data-fechar-sim>Cancelar</button>
+        <button type="submit" class="btn btn--ouro"><i class="fa-solid fa-paper-plane"></i> Chegar mensagem</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal" id="modalMotoChat" hidden>
+    <div class="modal__fundo" data-fechar-moto></div>
+    <div class="modal__caixa mini" role="dialog" aria-modal="true" aria-labelledby="tituloMotoChat">
+      <div class="form-moto__cab">
+        <h2 id="tituloMotoChat">Enviar moto do estoque</h2>
+        <button type="button" class="modal__fechar" data-fechar-moto aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-moto__corpo"><ul class="lista" id="listaMotoChat"></ul></div>
+    </div>
   </div>
 
   <datalist id="listaMarcas">

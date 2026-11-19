@@ -15,6 +15,8 @@
 
   const CHAVE_TOKEN = "mt_admin_token";
   let token = null;
+  let eu = null;           // { id, nome, papel } de quem está logado
+  let quemEscolhido = "";  // usuário escolhido na tela de login
   try { token = localStorage.getItem(CHAVE_TOKEN); } catch (_) {}
 
   const estado = {
@@ -71,6 +73,9 @@
 
   function sair(msg) {
     token = null;
+    eu = null;
+    try { clearInterval(atend.timer); } catch (_) { /* ainda não iniciado */ }
+    carregarEquipeLogin();
     try { localStorage.removeItem(CHAVE_TOKEN); } catch (_) {}
     fecharForm(true);
     mostrar("login");
@@ -85,12 +90,13 @@
     btn.disabled = true;
     $("#erroLogin").textContent = "";
     try {
-      const { token: t } = await api("/api/login", {
+      const { token: t, usuario } = await api("/api/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ senha: $("#senha").value }),
+        body: JSON.stringify({ usuario: quemEscolhido, senha: $("#senha").value }),
       });
       token = t;
+      eu = usuario;
       try { localStorage.setItem(CHAVE_TOKEN, t); } catch (_) {}
       await carregar();
     } catch (err) {
@@ -98,6 +104,27 @@
     } finally {
       btn.disabled = false;
     }
+  });
+
+  async function carregarEquipeLogin() {
+    try {
+      const { equipe } = await api("/api/login?equipe=1");
+      const cont = $("#quemSou");
+      cont.hidden = equipe.length < 2;
+      if (!quemEscolhido || !equipe.some((u) => u.id === quemEscolhido)) {
+        try { quemEscolhido = localStorage.getItem("mt_admin_quem") || ""; } catch (_) {}
+        if (!equipe.some((u) => u.id === quemEscolhido)) quemEscolhido = equipe[0]?.id || "";
+      }
+      cont.innerHTML = equipe.map((u) => `<button type="button" role="radio" aria-checked="${u.id === quemEscolhido}" class="${u.id === quemEscolhido ? "ativo" : ""}" data-id="${esc(u.id)}">${esc(u.nome)}</button>`).join("");
+    } catch (_) { /* sem lista: entra como gerente */ }
+  }
+  $("#quemSou").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    quemEscolhido = b.dataset.id;
+    try { localStorage.setItem("mt_admin_quem", quemEscolhido); } catch (_) {}
+    $$("#quemSou button").forEach((x) => { x.classList.toggle("ativo", x === b); x.setAttribute("aria-checked", x === b); });
+    $("#senha").focus();
   });
 
   $("#verSenha").addEventListener("click", () => {
@@ -119,8 +146,10 @@
       estado.exemplos = true;
     }
     mostrar("painel");
+    $("#euNome").innerHTML = eu ? `<i class="fa-solid fa-circle-user"></i> ${esc(eu.nome)}` : "";
     render();
     carregarProcuras();
+    iniciarAtendimento();
   }
 
   async function salvar(lista, msg = "Salvo! O site já foi atualizado.") {
@@ -409,6 +438,7 @@
   /* ---------- Abas ---------- */
   function abrirAba(nome) {
     $$("#menuAdm button").forEach((b) => b.classList.toggle("ativo", b.dataset.aba === nome));
+    $("#abaAtendimento").hidden = nome !== "atendimento";
     $("#abaEstoque").hidden = nome !== "estoque";
     $("#abaBusca").hidden = nome !== "busca";
     $("#abaProcuras").hidden = nome !== "procuras";
@@ -622,11 +652,410 @@
     } catch (err) { toast(err.message, true); }
   });
 
+  /* =========================================================
+     ATENDIMENTO (CRM de WhatsApp)
+     ========================================================= */
+  const atend = {
+    modo: "demo", equipe: [], conversas: [], filtro: "novas", busca: "",
+    aberta: null,          // telefone da conversa aberta
+    mensagens: [], assinaturaMsgs: "", timer: null, novasVistas: null,
+  };
+  const ETAPAS = { novo: "Novo", atendimento: "Em atendimento", proposta: "Proposta", vendido: "Vendido", perdido: "Perdido" };
+  const CORES = ["#e3a83a", "#4ea1ff", "#3ecf8e", "#c77dff", "#ff7a59", "#9aa5b1"];
+
+  const pessoa = (id) => atend.equipe.find((u) => u.id === id);
+  const nomePessoa = (id) => (id === eu?.id ? "Você" : pessoa(id)?.nome || "—");
+  const corPessoa = (id) => {
+    const i = atend.equipe.findIndex((u) => u.id === id);
+    return i < 0 ? CORES[5] : (atend.equipe[i].papel === "gerente" ? CORES[5] : CORES[i % 5]);
+  };
+  const iniciais = (n) => String(n || "?").replace(/^\+/, "").split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase() || "?";
+  const telBonito = (t) => {
+    const m = String(t).match(/^55(\d{2})(\d{4,5})(\d{4})$/);
+    return m ? `(${m[1]}) ${m[2]}-${m[3]}` : `+${t}`;
+  };
+  function quando(iso) {
+    const d = new Date(iso), hoje = new Date();
+    const ontem = new Date(); ontem.setDate(hoje.getDate() - 1);
+    const hora = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    if (d.toDateString() === hoje.toDateString()) return hora;
+    if (d.toDateString() === ontem.toDateString()) return "ontem";
+    return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  }
+  function bip() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880; g.gain.setValueAtTime(0.08, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+      o.start(); o.stop(ctx.currentTime + 0.35);
+    } catch (_) {}
+  }
+
+  /* ---------- Carregar lista ---------- */
+  async function carregarConversas(silencioso = false) {
+    try {
+      const d = await api("/api/conversas");
+      atend.modo = d.modo;
+      atend.equipe = d.equipe;
+      atend.conversas = d.conversas;
+      // Aviso sonoro quando chega conversa nova sem ninguém atendendo
+      const novas = new Set(d.conversas.filter((c) => !c.atendente && c.naoLidas).map((c) => c.tel + c.ultima?.em));
+      if (atend.novasVistas && [...novas].some((k) => !atend.novasVistas.has(k))) {
+        bip();
+        if (silencioso) toast("Nova mensagem de cliente!");
+      }
+      atend.novasVistas = novas;
+      renderAtend();
+    } catch (err) {
+      if (!silencioso) toast(err.message, true);
+    }
+  }
+
+  function renderAtend() {
+    $("#avisoDemo").hidden = atend.modo !== "demo";
+    $("#btnReiniciarDemo").hidden = eu?.papel !== "gerente";
+
+    const novas = atend.conversas.filter((c) => !c.atendente && c.etapa !== "vendido" && c.etapa !== "perdido");
+    const minhas = atend.conversas.filter((c) => c.atendente === eu?.id && c.etapa !== "vendido" && c.etapa !== "perdido");
+    const minhasNaoLidas = minhas.reduce((s, c) => s + (c.naoLidas || 0), 0);
+    $("#cNovas").textContent = novas.length || "";
+    $("#cMinhas").textContent = minhasNaoLidas || "";
+    $("#nAtend").textContent = (novas.length + minhasNaoLidas) || "";
+    document.title = (novas.length + minhasNaoLidas ? `(${novas.length + minhasNaoLidas}) ` : "") + "Painel MT Multimarcas";
+
+    // Resumo da equipe: quantas conversas ativas cada um tem
+    $("#equipeResumo").innerHTML = atend.equipe.filter((u) => u.papel === "atendente" || u.id === eu?.id).map((u) => {
+      const ativas = atend.conversas.filter((c) => c.atendente === u.id && !["vendido", "perdido"].includes(c.etapa)).length;
+      const vendas = atend.conversas.filter((c) => c.atendente === u.id && c.etapa === "vendido").length;
+      return `<div class="pessoa${u.id === eu?.id ? " pessoa--eu" : ""}">
+        <span class="avatar avatar--p" style="--cor:${corPessoa(u.id)}">${esc(iniciais(u.nome))}</span>
+        <div><b>${esc(u.id === eu?.id ? u.nome + " (você)" : u.nome)}</b><small>${ativas} em atendimento · ${vendas} vendas</small></div>
+      </div>`;
+    }).join("");
+
+    const termo = slug(atend.busca);
+    let lista = atend.filtro === "novas" ? novas : atend.filtro === "minhas" ? minhas : atend.conversas;
+    if (termo) lista = atend.conversas.filter((c) => slug(`${c.nome} ${c.tel}`).includes(termo));
+
+    $("#listaConv").innerHTML = lista.length ? lista.map((c) => {
+      const dono = c.atendente;
+      return `
+      <li class="conv${c.tel === atend.aberta ? " conv--ativa" : ""}${c.naoLidas ? " conv--naolida" : ""}" data-tel="${esc(c.tel)}" tabindex="0">
+        <span class="avatar">${esc(iniciais(c.nome))}</span>
+        <div class="conv__meio">
+          <div class="conv__linha"><b>${esc(c.nome)}</b><time>${c.ultima ? quando(c.ultima.em) : ""}</time></div>
+          <p>${c.ultima?.de === "loja" ? '<i class="fa-solid fa-reply"></i> ' : ""}${esc(c.ultima?.texto || "")}</p>
+          <div class="conv__tags">
+            <span class="etapa etapa--${c.etapa}">${ETAPAS[c.etapa]}</span>
+            ${dono ? `<span class="dono" style="--cor:${corPessoa(dono)}"><i class="fa-solid fa-headset"></i> ${esc(nomePessoa(dono))}</span>` : `<span class="dono dono--livre">Ninguém atendendo</span>`}
+          </div>
+        </div>
+        ${c.naoLidas ? `<span class="bolinha">${c.naoLidas}</span>` : ""}
+      </li>`;
+    }).join("") : `<li class="convs__vazio">${atend.filtro === "novas" && !termo ? "Nenhuma conversa esperando 🎉" : "Nenhuma conversa aqui."}</li>`;
+
+    if (atend.aberta) renderBarra();
+  }
+
+  /* ---------- Conversa aberta ---------- */
+  const conversaAberta = () => atend.conversas.find((c) => c.tel === atend.aberta);
+
+  async function abrirConversa(tel) {
+    atend.aberta = tel;
+    atend.assinaturaMsgs = "";
+    $("#atendGrid").classList.add("atend-grid--chat");
+    $("#chatVazio").hidden = true;
+    $("#chatAberto").hidden = false;
+    $("#chatNotas").hidden = true;
+    const c = conversaAberta();
+    if (c) {
+      $("#chatNome").textContent = c.nome;
+      $("#chatTel").textContent = telBonito(c.tel);
+      $("#chatAvatar").textContent = iniciais(c.nome);
+      $("#chatAbrirWhats").href = `https://wa.me/${c.tel}`;
+      $("#notas").value = c.notas || "";
+    }
+    $("#chatMsgs").innerHTML = `<div class="carregando"><i class="fa-solid fa-spinner fa-spin"></i> Carregando conversa...</div>`;
+    renderAtend();
+    renderRapidas();
+    await carregarMensagens(true);
+    // Quem está atendendo abriu: zera as não lidas
+    if (c && c.naoLidas && (c.atendente === eu.id || !c.atendente)) acao("lida", {}, true);
+  }
+
+  function fecharConversa() {
+    atend.aberta = null;
+    $("#atendGrid").classList.remove("atend-grid--chat");
+    $("#chatAberto").hidden = true;
+    $("#chatVazio").hidden = false;
+    renderAtend();
+  }
+
+  async function carregarMensagens(rolar = false) {
+    const tel = atend.aberta;
+    if (!tel) return;
+    try {
+      const { conversa, mensagens } = await api(`/api/conversas/${tel}`);
+      if (tel !== atend.aberta) return;
+      const i = atend.conversas.findIndex((c) => c.tel === tel);
+      if (i >= 0) atend.conversas[i] = conversa;
+      const assinatura = JSON.stringify(mensagens.map((m) => [m.id, m.status]));
+      if (assinatura !== atend.assinaturaMsgs) {
+        const box = $("#chatMsgs");
+        const noFim = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+        atend.assinaturaMsgs = assinatura;
+        atend.mensagens = mensagens;
+        renderMensagens();
+        if (rolar || noFim) box.scrollTop = box.scrollHeight;
+      }
+      renderBarra();
+    } catch (err) {
+      if (rolar) $("#chatMsgs").innerHTML = `<div class="aviso-busca">${esc(err.message)}</div>`;
+    }
+  }
+
+  function renderMensagens() {
+    let dia = "";
+    const ICONE = { simulada: "fa-solid fa-check", enviada: "fa-solid fa-check", entregue: "fa-solid fa-check-double", lida: "fa-solid fa-check-double lida", falhou: "fa-solid fa-triangle-exclamation", celular: "fa-solid fa-mobile-screen" };
+    $("#chatMsgs").innerHTML = atend.mensagens.map((m) => {
+      const d = new Date(m.em).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+      const sep = d !== dia ? `<div class="dia"><span>${esc(d.charAt(0).toUpperCase() + d.slice(1))}</span></div>` : "";
+      dia = d;
+      const autor = m.de === "loja"
+        ? `<span class="msg__autor" style="--cor:${corPessoa(m.atendente)}">${m.status === "celular" ? "Pelo celular" : esc(nomePessoa(m.atendente))}</span>` : "";
+      return `${sep}<div class="msg msg--${m.de}">
+        ${autor}
+        <div class="msg__texto">${esc(m.texto).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')}</div>
+        <span class="msg__hora">${new Date(m.em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+          ${m.de === "loja" && m.status ? `<i class="${ICONE[m.status] || ""}" title="${esc(m.status)}"></i>` : ""}</span>
+      </div>`;
+    }).join("") || `<div class="convs__vazio">Sem mensagens ainda.</div>`;
+  }
+
+  function renderBarra() {
+    const c = conversaAberta();
+    if (!c) return;
+    const dono = c.atendente;
+    const souEu = dono === eu.id;
+    const gerente = eu.papel === "gerente";
+    const outros = atend.equipe.filter((u) => u.id !== dono);
+    const transferir = (souEu || gerente || !dono) && dono ? `
+      <select class="sel-mini" id="selTransferir" aria-label="Transferir conversa">
+        <option value="">Transferir para...</option>
+        ${outros.map((u) => `<option value="${esc(u.id)}">${esc(u.nome)}</option>`).join("")}
+      </select>` : "";
+    $("#chatBarra").innerHTML = `
+      <div class="barra__quem">
+        ${dono
+          ? `<span class="dono" style="--cor:${corPessoa(dono)}"><i class="fa-solid fa-headset"></i> ${souEu ? "Você está atendendo" : esc(nomePessoa(dono)) + " está atendendo"}</span>`
+          : `<span class="dono dono--livre"><i class="fa-solid fa-bell"></i> Ninguém atendendo ainda</span>`}
+      </div>
+      <div class="barra__acoes">
+        ${!dono ? `<button class="btn btn--ouro btn--sm" data-acao-chat="assumir"><i class="fa-solid fa-hand"></i> Assumir</button>` : ""}
+        ${transferir}
+        ${dono && (souEu || gerente) ? `<button class="btn btn--contorno btn--sm" data-acao-chat="liberar" title="Devolver para Novas">Liberar</button>` : ""}
+        <select class="sel-mini sel-etapa etapa--${c.etapa}" id="selEtapa" aria-label="Etapa">
+          ${Object.entries(ETAPAS).map(([k, v]) => `<option value="${k}"${k === c.etapa ? " selected" : ""}>${v}</option>`).join("")}
+        </select>
+      </div>`;
+
+    // Aviso de quem pode responder e da janela de 24h do WhatsApp
+    const aviso = $("#chat24h");
+    const bloqueado = dono && !souEu && !gerente;
+    const vencida = atend.modo === "whatsapp" && c.ultimaEntradaEm && Date.now() - new Date(c.ultimaEntradaEm) > 24 * 3600e3;
+    aviso.hidden = !bloqueado && !vencida;
+    aviso.innerHTML = bloqueado
+      ? `<i class="fa-solid fa-lock"></i> Esta conversa está com <b>${esc(nomePessoa(dono))}</b>. Para responder, peça para transferir para você.`
+      : vencida ? `<i class="fa-solid fa-clock"></i> Já passaram 24h da última mensagem do cliente. O WhatsApp só deixa responder quando ele mandar uma nova.` : "";
+    $("#txtEnvio").disabled = !!bloqueado;
+    $("#btnEnviar").disabled = !!bloqueado;
+  }
+
+  async function acao(nome, extra = {}, quieto = false) {
+    const tel = atend.aberta;
+    try {
+      const { conversa } = await api(`/api/conversas/${tel}/acao`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ acao: nome, ...extra }),
+      });
+      const i = atend.conversas.findIndex((c) => c.tel === tel);
+      if (i >= 0) atend.conversas[i] = conversa;
+      renderAtend();
+      if (!quieto) {
+        const msg = { assumir: "Conversa assumida. Agora é com você!", liberar: "Conversa voltou para Novas.", transferir: `Transferida para ${nomePessoa(conversa.atendente)}.`, etapa: `Etapa: ${ETAPAS[conversa.etapa]}.`, notas: "Notas salvas." }[nome];
+        if (msg) toast(msg);
+      }
+    } catch (err) {
+      toast(err.message, true);
+      carregarConversas(true);
+    }
+  }
+
+  $("#chatBarra").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-acao-chat]");
+    if (b) acao(b.dataset.acaoChat);
+  });
+  $("#chatBarra").addEventListener("change", (e) => {
+    if (e.target.id === "selTransferir" && e.target.value) acao("transferir", { para: e.target.value });
+    if (e.target.id === "selEtapa") acao("etapa", { etapa: e.target.value });
+  });
+  $("#chatNotasBtn").addEventListener("click", () => { $("#chatNotas").hidden = !$("#chatNotas").hidden; });
+  $("#salvarNotas").addEventListener("click", () => acao("notas", { notas: $("#notas").value }));
+  $("#chatVoltar").addEventListener("click", fecharConversa);
+
+  $("#listaConv").addEventListener("click", (e) => {
+    const li = e.target.closest(".conv");
+    if (li) abrirConversa(li.dataset.tel);
+  });
+  $("#listaConv").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.target.classList.contains("conv")) abrirConversa(e.target.dataset.tel);
+  });
+  $("#filtroConv").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    atend.filtro = b.dataset.f;
+    $$("#filtroConv button").forEach((x) => x.classList.toggle("ativo", x === b));
+    renderAtend();
+  });
+  $("#buscaConv").addEventListener("input", (e) => { atend.busca = e.target.value; renderAtend(); });
+
+  /* ---------- Enviar ---------- */
+  const txt = $("#txtEnvio");
+  const ajustarAltura = () => { txt.style.height = "auto"; txt.style.height = Math.min(txt.scrollHeight, 140) + "px"; };
+  txt.addEventListener("input", ajustarAltura);
+  txt.addEventListener("keydown", (e) => {
+    // Enter envia no computador; Shift+Enter quebra linha
+    if (e.key === "Enter" && !e.shiftKey && window.matchMedia("(pointer: fine)").matches) {
+      e.preventDefault();
+      $("#formEnvio").requestSubmit();
+    }
+  });
+
+  $("#formEnvio").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const texto = txt.value.trim();
+    if (!texto || !atend.aberta) return;
+    const btn = $("#btnEnviar");
+    btn.disabled = true;
+    try {
+      const { conversa } = await api(`/api/conversas/${atend.aberta}/mensagens`, {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ texto }),
+      });
+      txt.value = "";
+      ajustarAltura();
+      const i = atend.conversas.findIndex((c) => c.tel === conversa.tel);
+      if (i >= 0) atend.conversas[i] = conversa;
+      await carregarMensagens(true);
+      renderAtend();
+    } catch (err) {
+      toast(err.message, true);
+    } finally {
+      btn.disabled = false;
+      renderBarra();
+    }
+  });
+
+  function renderRapidas() {
+    const L = typeof LOJA !== "undefined" ? LOJA : {};
+    const frases = [
+      ["Saudação", `Olá! Aqui é ${eu.papel === "gerente" ? "da" : `o ${eu.nome}, da`} MT Multimarcas 🏍️ Como posso te ajudar?`],
+      ["Financiamento", "Para eu fazer a simulação do financiamento, me passa por favor seu nome completo, CPF e data de nascimento?"],
+      ["Troca", "Aceitamos sua moto na troca! Me manda fotos dela, ano e quilometragem que eu faço a avaliação."],
+      ["Endereço", `Estamos em ${L.endereco || "nossa loja"}. Horário: ${(L.horarios || []).join(" | ")}.`],
+      ["Catálogo", `Dá uma olhada no nosso estoque completo: ${location.origin}/`],
+    ];
+    $("#rapidas").innerHTML = frases.map(([t, f], i) => `<button type="button" data-i="${i}">${esc(t)}</button>`).join("");
+    $("#rapidas").onclick = (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      txt.value = frases[Number(b.dataset.i)][1];
+      ajustarAltura();
+      txt.focus();
+    };
+  }
+
+  /* ---------- Mandar moto do estoque ---------- */
+  $("#btnMotoChat").addEventListener("click", () => {
+    const disp = estado.motos.filter((m) => m.status !== "vendida");
+    $("#listaMotoChat").innerHTML = disp.length ? disp.map((m) => `
+      <li class="item item--clique" data-id="${esc(m.id)}" tabindex="0">
+        <div class="item__foto">${m.fotos?.[0] ? `<img src="${esc(fotoSrc(m.fotos[0]))}" alt="">` : `<div class="ilustra"><i class="fa-solid fa-motorcycle" style="color:var(--ouro)"></i></div>`}</div>
+        <div class="item__info"><h3>${esc(m.marca)} ${esc(m.modelo)}</h3><p><span class="item__preco">${BRL.format(m.preco)}</span> · ${m.ano} · ${m.km ? NUM.format(m.km) + " km" : "0 km"}</p></div>
+      </li>`).join("") : `<li class="convs__vazio">Nenhuma moto à venda no estoque.</li>`;
+    $("#modalMotoChat").hidden = false;
+  });
+  $("#listaMotoChat").addEventListener("click", (e) => {
+    const li = e.target.closest("[data-id]");
+    if (!li) return;
+    const m = estado.motos.find((x) => x.id === li.dataset.id);
+    if (!m) return;
+    txt.value = `🏍️ ${m.marca} ${m.modelo} ${m.ano}\n${m.km ? NUM.format(m.km) + " km" : "0 km"} · ${BRL.format(m.preco)}\nFotos e detalhes: ${location.origin}/#moto=${m.id}`;
+    ajustarAltura();
+    $("#modalMotoChat").hidden = true;
+    txt.focus();
+  });
+  $("#modalMotoChat").addEventListener("click", (e) => { if (e.target.closest("[data-fechar-moto]")) $("#modalMotoChat").hidden = true; });
+
+  /* ---------- Demonstração ---------- */
+  const EXEMPLOS = [
+    ["Bruno Almeida", "Olá! Tem alguma Bros 160 até R$ 18 mil?"],
+    ["Aline Costa", "Bom dia, vocês financiam pra quem tem nome sujo?"],
+    ["Diego Ramos", "Quanto vocês pagam numa Fan 160 2021 com 20 mil km?"],
+    ["Larissa Prado", "Oi! A MT-03 azul ainda está disponível? Posso ir ver hoje?"],
+  ];
+  $("#btnSimular").addEventListener("click", () => {
+    const [n, t] = EXEMPLOS[Math.floor(Math.random() * EXEMPLOS.length)];
+    const f = $("#formSimular");
+    f.nome.value = n;
+    f.texto.value = t;
+    $("#modalSimular").hidden = false;
+  });
+  $("#modalSimular").addEventListener("click", (e) => { if (e.target.closest("[data-fechar-sim]")) $("#modalSimular").hidden = true; });
+  $("#formSimular").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    try {
+      // Mesmo nome = mesmo cliente (telefone fixo por nome, para a demonstração)
+      const existente = atend.conversas.find((c) => c.nome.toLowerCase() === f.nome.value.trim().toLowerCase());
+      await api("/api/conversas/simular", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ nome: f.nome.value, texto: f.texto.value, tel: existente?.tel }),
+      });
+      $("#modalSimular").hidden = true;
+      atend.filtro = existente?.atendente ? "todas" : "novas";
+      $$("#filtroConv button").forEach((x) => x.classList.toggle("ativo", x.dataset.f === atend.filtro));
+      await carregarConversas(true);
+      if (atend.aberta) carregarMensagens();
+    } catch (err) { toast(err.message, true); }
+  });
+  $("#btnReiniciarDemo").addEventListener("click", async () => {
+    if (!confirm("Apagar as conversas de teste e criar as originais de novo?")) return;
+    try {
+      await api("/api/conversas/reiniciar", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+      fecharConversa();
+      atend.novasVistas = null;
+      await carregarConversas();
+      toast("Demonstração reiniciada.");
+    } catch (err) { toast(err.message, true); }
+  });
+
+  /* ---------- Atualização automática ---------- */
+  function iniciarAtendimento() {
+    clearInterval(atend.timer);
+    carregarConversas();
+    atend.timer = setInterval(() => {
+      if (document.visibilityState !== "visible" || !token) return;
+      carregarConversas(true);
+      if (atend.aberta && !$("#abaAtendimento").hidden) carregarMensagens();
+    }, 4000);
+  }
+
   /* ---------- Início ---------- */
   (async () => {
     if (!token) return sair();
     try {
-      await api("/api/login", { method: "GET" }); // confere se a sessão ainda vale
+      ({ usuario: eu } = await api("/api/login", { method: "GET" })); // confere se a sessão ainda vale
       await carregar();
     } catch (err) {
       if (token) { mostrar("login"); $("#erroLogin").textContent = err.message; }
