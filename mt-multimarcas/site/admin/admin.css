@@ -182,3 +182,64 @@ legend { font-family: var(--fonte-titulo); font-weight: 800; color: var(--ouro);
 /* Aviso no topo para não cobrir os botões de baixo */
 .admin .toast { top: 14px; bottom: auto; transform: translate(-50%, -160%); width: max-content; max-width: calc(100% - 32px); text-align: center; z-index: 300; }
 .admin .toast.visivel { transform: translate(-50%, 0); }
+
+/* ---------- Abas do painel ---------- */
+.menu-adm { display: flex; gap: 6px; padding-top: 16px; overflow-x: auto; scrollbar-width: none; }
+.menu-adm button {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+  padding: 12px 14px; border-radius: 12px; border: 1px solid var(--linha); background: var(--preto-3);
+  color: var(--texto-2); font-weight: 600; cursor: pointer;
+}
+.menu-adm button.ativo { background: var(--grad-ouro); color: #1a1206; border-color: transparent; }
+.menu-adm b:empty { display: none; }
+.menu-adm b { background: var(--vermelho); color: #fff; border-radius: 999px; font-size: .72rem; padding: 1px 7px; }
+.menu-adm button.ativo b { background: #1a1206; color: var(--ouro-claro); }
+
+/* ---------- Busca ---------- */
+.busca-form { padding: 20px; display: grid; gap: 14px; }
+.busca-form h2 { font-size: 1.2rem; margin: 0; }
+.busca-campos { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; align-items: end; }
+.bloco-res { display: grid; gap: 12px; margin-top: 8px; }
+.bloco-res h3 { font-size: 1rem; margin: 0; display: flex; gap: 8px; align-items: center; }
+.bloco-res h3 i { color: var(--ouro); }
+.bloco-res__cab { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cota { font-size: .8rem; color: var(--texto-3); }
+.atalhos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.atalho {
+  display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 10px; border-radius: 12px;
+  background: var(--preto-3); border: 1px solid var(--linha); font-weight: 700; font-size: .92rem; transition: border-color .2s;
+}
+.atalho:hover { border-color: var(--ouro); }
+.atalho i { font-size: 1.1rem; color: var(--ouro-claro); }
+.anuncio {
+  display: grid; grid-template-columns: 84px 1fr; gap: 12px; padding: 12px; border-radius: var(--raio);
+  background: var(--preto-3); border: 1px solid var(--linha); transition: border-color .2s;
+}
+.anuncio:hover { border-color: var(--linha-forte); }
+.anuncio__foto { width: 84px; height: 64px; border-radius: 8px; overflow: hidden; background: var(--preto); display: grid; place-items: center; color: var(--texto-3); }
+.anuncio__foto img { width: 100%; height: 100%; object-fit: cover; }
+.anuncio h4 { margin: 0 0 4px; font-size: .95rem; line-height: 1.3; }
+.anuncio p { margin: 0; font-size: .82rem; color: var(--texto-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.anuncio__meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px; font-size: .78rem; color: var(--texto-3); }
+.anuncio__meta .tag { font-size: .65rem; padding: 2px 7px; backdrop-filter: none; }
+.anuncio__preco { font-family: var(--fonte-titulo); font-weight: 800; color: var(--ouro-claro); font-size: .95rem; }
+.lista-anuncios { display: grid; gap: 10px; }
+.aviso-busca { padding: 16px; border-radius: var(--raio); border: 1px dashed var(--linha-forte); color: var(--texto-2); font-size: .92rem; }
+.aviso-busca b { color: var(--texto); }
+.carregando { display: flex; align-items: center; gap: 10px; color: var(--texto-2); padding: 16px 4px; }
+.salvar-procura { padding: 18px; margin-top: 16px; }
+.secao-adm__cab h2 { font-size: 1.3rem; margin-bottom: 4px; }
+.procura { padding: 14px; border-radius: var(--raio); background: var(--preto-3); border: 1px solid var(--linha); display: grid; gap: 8px; }
+.procura h3 { margin: 0; font-size: 1.02rem; }
+.procura p { margin: 0; font-size: .85rem; color: var(--texto-2); }
+.procura__acoes { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.procura__acoes .icone { width: auto; padding: 0 12px; gap: 6px; display: inline-flex; align-items: center; font-size: .85rem; }
+.procura__acoes .icone b { display: inline !important; font-weight: 600; }
+.icone--whats { color: var(--verde); border-color: rgba(37,211,102,.35); }
+
+@media (max-width: 760px) {
+  .busca-campos { grid-template-columns: 1fr 1fr; }
+  .busca-modelo { grid-column: 1 / -1; }
+  .atalhos { grid-template-columns: 1fr 1fr; }
+  .menu-adm button { padding: 10px 8px; font-size: .85rem; gap: 6px; }
+}

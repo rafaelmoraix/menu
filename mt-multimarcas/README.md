@@ -29,6 +29,15 @@ As mudanças aparecem no site na hora. As motos e as fotos ficam guardadas no **
 (Project configuration → Environment variables). Para trocar, altere o valor e publique o site de novo.
 Trocar a senha desconecta quem estiver logado. O login é limitado a 10 tentativas por minuto.
 
+## Buscar moto fora da loja (aba "Buscar moto" do painel)
+
+- Digite modelo, ano, preço máximo e estado.
+- **Já tem na sua loja:** mostra motos parecidas do próprio estoque.
+- **Botões de atalho** (OLX, Marketplace, Mercado Livre, Google): abrem a busca pronta no site. Não gastam cota.
+- **Anúncios encontrados na internet:** resultados do Google via **SerpAPI** (plano grátis, cerca de 250 buscas/mês).
+  A mesma busca repetida em até 6 horas não gasta cota. A chave fica na variável `BUSCA_API_KEY` da Netlify.
+- **Procuras:** salve o pedido do cliente (nome e WhatsApp) e repita a busca depois com um toque.
+
 ## Dados da loja
 
 WhatsApp, telefone, endereço, Instagram, horários e a taxa da simulação ficam em **`site/js/dados.js`** (objeto `LOJA`).
@@ -49,7 +58,7 @@ mt-multimarcas/
 │   ├── css/ js/ img/         visual, scripts (dados.js = dados da loja) e logos
 │   └── vendor/fontawesome/   ícones
 ├── netlify/
-│   ├── functions/            API: /api/login, /api/motos, /api/fotos e /fotos/*
+│   ├── functions/            API: /api/login, /api/motos, /api/fotos, /fotos/*, /api/busca, /api/procuras
 │   └── lib/                  login (token assinado) e validação das motos
 ├── netlify.toml              configuração da Netlify
 └── package.json

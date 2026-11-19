@@ -50,7 +50,13 @@
       </div>
     </header>
 
-    <main class="container adm">
+    <nav class="container menu-adm" id="menuAdm" role="tablist">
+      <button class="ativo" data-aba="estoque" role="tab"><i class="fa-solid fa-motorcycle"></i> Estoque</button>
+      <button data-aba="busca" role="tab"><i class="fa-solid fa-magnifying-glass"></i> Buscar moto</button>
+      <button data-aba="procuras" role="tab"><i class="fa-solid fa-clipboard-list"></i> Procuras <b id="nProcuras"></b></button>
+    </nav>
+
+    <main class="container adm" id="abaEstoque">
       <div class="aviso-exemplos cartao" id="avisoExemplos" hidden>
         <i class="fa-solid fa-circle-info"></i>
         <div>
@@ -84,6 +90,66 @@
         <i class="fa-solid fa-motorcycle"></i>
         <h3>Nenhuma moto aqui</h3>
         <p>Toque em <b>Nova moto</b> para cadastrar a primeira.</p>
+      </div>
+    </main>
+
+    <!-- ============ BUSCAR MOTO ============ -->
+    <main class="container adm" id="abaBusca" hidden>
+      <form class="cartao busca-form" id="formBusca">
+        <h2>Procurar moto fora da loja</h2>
+        <div class="busca-campos">
+          <label class="campo busca-modelo"><span>Modelo *</span><input name="modelo" required placeholder="Ex.: Fazer 250" autocomplete="off"></label>
+          <label class="campo"><span>Ano</span><input name="ano" inputmode="numeric" maxlength="4" placeholder="2019"></label>
+          <label class="campo"><span>Preço até (R$)</span><input name="precoMax" inputmode="numeric" placeholder="15.000" data-moeda></label>
+          <label class="campo"><span>Estado</span><select name="uf"><option value="">Brasil todo</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></label>
+        </div>
+        <label class="chave"><input type="checkbox" name="recentes"><span></span> Só anúncios do último mês</label>
+        <button class="btn btn--ouro btn--bloco" type="submit" id="btnBuscar"><i class="fa-solid fa-magnifying-glass"></i> Buscar</button>
+      </form>
+
+      <div id="resBusca" hidden>
+        <section class="bloco-res" id="noEstoque" hidden>
+          <h3><i class="fa-solid fa-store"></i> Já tem na sua loja</h3>
+          <ul class="lista" id="listaNoEstoque"></ul>
+        </section>
+
+        <section class="bloco-res">
+          <h3><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir a busca direto no site</h3>
+          <div class="atalhos" id="atalhos"></div>
+          <p class="dica">Abre o site com a busca pronta. Não gasta cota. O Marketplace abre no app do Facebook se você estiver logado.</p>
+        </section>
+
+        <section class="bloco-res">
+          <div class="bloco-res__cab">
+            <h3><i class="fa-brands fa-google"></i> Anúncios encontrados na internet</h3>
+            <span class="cota" id="cota"></span>
+          </div>
+          <div id="resultados"></div>
+        </section>
+
+        <section class="bloco-res cartao salvar-procura">
+          <h3><i class="fa-solid fa-user-plus"></i> É para um cliente? Salve a procura</h3>
+          <form class="busca-campos" id="formProcura">
+            <label class="campo"><span>Cliente</span><input name="cliente" placeholder="Nome"></label>
+            <label class="campo"><span>WhatsApp</span><input name="telefone" inputmode="tel" placeholder="(11) 99999-9999"></label>
+            <label class="campo busca-modelo"><span>Observação</span><input name="obs" placeholder="Ex.: aceita moto na troca"></label>
+            <button class="btn btn--contorno btn--bloco busca-modelo" type="submit"><i class="fa-solid fa-floppy-disk"></i> Salvar procura</button>
+          </form>
+        </section>
+      </div>
+    </main>
+
+    <!-- ============ PROCURAS ============ -->
+    <main class="container adm" id="abaProcuras" hidden>
+      <div class="secao-adm__cab">
+        <h2>Procuras de clientes</h2>
+        <p class="dica">Motos que clientes pediram e a loja ainda não tem. Toque em <b>Buscar de novo</b> para procurar outra vez.</p>
+      </div>
+      <ul class="lista" id="listaProcuras"></ul>
+      <div class="vazio" id="procurasVazia" hidden>
+        <i class="fa-solid fa-clipboard-list"></i>
+        <h3>Nenhuma procura salva</h3>
+        <p>Na aba <b>Buscar moto</b>, faça a busca e salve para o cliente.</p>
       </div>
     </main>
   </div>

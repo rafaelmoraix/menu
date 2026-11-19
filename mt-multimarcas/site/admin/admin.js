@@ -120,6 +120,7 @@
     }
     mostrar("painel");
     render();
+    carregarProcuras();
   }
 
   async function salvar(lista, msg = "Salvo! O site já foi atualizado.") {
@@ -403,6 +404,222 @@
     } finally {
       btn.disabled = false;
     }
+  });
+
+  /* ---------- Abas ---------- */
+  function abrirAba(nome) {
+    $$("#menuAdm button").forEach((b) => b.classList.toggle("ativo", b.dataset.aba === nome));
+    $("#abaEstoque").hidden = nome !== "estoque";
+    $("#abaBusca").hidden = nome !== "busca";
+    $("#abaProcuras").hidden = nome !== "procuras";
+    window.scrollTo(0, 0);
+  }
+  $("#menuAdm").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (b) abrirAba(b.dataset.aba);
+  });
+
+  /* ---------- Buscar moto ---------- */
+  const fBusca = $("#formBusca");
+  let ultimaBusca = null;
+
+  $$("[data-moeda]", fBusca).forEach((i) => i.addEventListener("input", () => {
+    const n = soNumeros(i.value);
+    i.value = n ? NUM.format(n) : "";
+  }));
+
+  function linksAtalho({ modelo, ano, precoMax, uf }) {
+    const termo = `${modelo} ${ano}`.trim();
+    const q = encodeURIComponent(termo);
+    const olx = `https://www.olx.com.br/autos-e-pecas/motos${uf ? "/estado-" + uf.toLowerCase() : ""}?q=${q}${precoMax ? "&pe=" + precoMax : ""}`;
+    const face = `https://www.facebook.com/marketplace/search/?query=${q}${precoMax ? "&maxPrice=" + precoMax : ""}`;
+    const ml = `https://lista.mercadolivre.com.br/${slug(termo)}${precoMax ? "_PriceRange_0-" + precoMax : ""}`;
+    const google = `https://www.google.com/search?q=${encodeURIComponent(termo + " moto à venda" + (uf ? " " + uf : ""))}`;
+    return [
+      ["OLX", "fa-solid fa-tag", olx],
+      ["Marketplace", "fa-brands fa-facebook", face],
+      ["Mercado Livre", "fa-solid fa-handshake", ml],
+      ["Google", "fa-brands fa-google", google],
+    ];
+  }
+
+  function lerBusca(form = fBusca) {
+    return {
+      modelo: form.modelo.value.trim(),
+      ano: form.ano.value.replace(/\D/g, "").slice(0, 4),
+      precoMax: soNumeros(form.precoMax.value),
+      uf: form.uf.value,
+      recentes: form.recentes.checked,
+    };
+  }
+
+  function preencherBusca(b) {
+    fBusca.modelo.value = b.modelo || "";
+    fBusca.ano.value = b.ano || "";
+    fBusca.precoMax.value = b.precoMax ? NUM.format(b.precoMax) : "";
+    fBusca.uf.value = b.uf || "";
+  }
+
+  function fotoSrc(u) { return u.startsWith("/") ? u : "../" + u; }
+
+  function renderNoEstoque(b) {
+    const palavras = slug(b.modelo).split("-").filter(Boolean);
+    const achadas = estado.motos.filter((m) => {
+      if (m.status === "vendida") return false;
+      const nome = slug(`${m.marca} ${m.modelo}`);
+      return palavras.every((p) => nome.includes(p)) &&
+        (!b.ano || Math.abs(Number(m.ano) - Number(b.ano)) <= 1) &&
+        (!b.precoMax || m.preco <= b.precoMax * 1.1);
+    });
+    $("#noEstoque").hidden = achadas.length === 0;
+    $("#listaNoEstoque").innerHTML = achadas.map((m) => `
+      <li class="item"><div class="item__foto">${m.fotos?.[0]
+        ? `<img src="${esc(fotoSrc(m.fotos[0]))}" alt="">`
+        : `<div class="ilustra"><i class="fa-solid fa-motorcycle" style="color:var(--ouro)"></i></div>`}</div>
+        <div class="item__info"><h3>${esc(m.marca)} ${esc(m.modelo)}</h3>
+        <p><span class="item__preco">${BRL.format(m.preco)}</span> · ${m.ano} · ${m.km ? NUM.format(m.km) + " km" : "0 km"}</p></div></li>`).join("");
+  }
+
+  async function atualizarCota() {
+    try {
+      const c = await api("/api/busca?conta=1");
+      $("#cota").textContent = c.restantes != null ? `${c.restantes} buscas restantes no mês` : "";
+    } catch (_) { $("#cota").textContent = ""; }
+  }
+
+  function htmlAnuncio(r) {
+    return `
+      <a class="anuncio" href="${esc(r.url)}" target="_blank" rel="noopener">
+        <div class="anuncio__foto">${r.foto
+          ? `<img src="${esc(r.foto)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`
+          : `<i class="fa-solid fa-motorcycle"></i>`}</div>
+        <div>
+          <h4>${esc(r.titulo)}</h4>
+          <p>${esc(r.trecho)}</p>
+          <div class="anuncio__meta">
+            <span class="tag">${esc(r.site)}</span>
+            ${r.preco ? `<span class="anuncio__preco">${BRL.format(r.preco)}</span>` : ""}
+            ${r.data ? `<span>${esc(r.data)}</span>` : ""}
+          </div>
+        </div>
+      </a>`;
+  }
+
+  async function buscar(b) {
+    ultimaBusca = b;
+    $("#resBusca").hidden = false;
+    renderNoEstoque(b);
+    $("#atalhos").innerHTML = linksAtalho(b).map(([nome, icone, url]) =>
+      `<a class="atalho" href="${esc(url)}" target="_blank" rel="noopener"><i class="${icone}"></i> ${nome}</a>`).join("");
+
+    const res = $("#resultados");
+    res.innerHTML = `<div class="carregando"><i class="fa-solid fa-spinner fa-spin"></i> Procurando anúncios...</div>`;
+    const btn = $("#btnBuscar");
+    btn.disabled = true;
+    try {
+      const qs = new URLSearchParams({ modelo: b.modelo, ano: b.ano, precoMax: b.precoMax || "", uf: b.uf, recentes: b.recentes ? "1" : "" });
+      const { resultados, escondidos } = await api(`/api/busca?${qs}`);
+      const acima = escondidos ? `${escondidos} anúncio(s) acima de ${BRL.format(b.precoMax)} foram escondidos.` : "";
+      if (!resultados.length) {
+        res.innerHTML = `<div class="aviso-busca">Nenhum anúncio encontrado. ${acima} Tente os botões acima ou tire o ano da busca.</div>`;
+      } else {
+        res.innerHTML = `<div class="lista-anuncios">${resultados.map(htmlAnuncio).join("")}</div>
+          ${acima ? `<p class="dica">${acima}</p>` : ""}
+          <p class="dica">Os anúncios vêm do Google e podem já ter sido vendidos. Para ver os mais novos, use os botões acima.</p>`;
+      }
+      atualizarCota();
+    } catch (err) {
+      const semChave = err.message.includes("ainda não foi ativada");
+      res.innerHTML = `<div class="aviso-busca">${semChave
+        ? "<b>A lista de anúncios aqui no painel ainda não foi ativada.</b> Enquanto isso, use os botões acima: eles já abrem a busca pronta em cada site."
+        : esc(err.message)}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  fBusca.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const b = lerBusca();
+    if (b.modelo.length < 2) { toast("Digite o modelo da moto.", true); return; }
+    buscar(b);
+  });
+
+  /* ---------- Procuras de clientes ---------- */
+  let procuras = [];
+
+  async function carregarProcuras() {
+    try {
+      ({ procuras } = await api("/api/procuras"));
+      renderProcuras();
+    } catch (_) { /* sem conexão: tenta na próxima vez */ }
+  }
+
+  async function salvarProcuras(lista, msg) {
+    ({ procuras } = await api("/api/procuras", {
+      method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ procuras: lista }),
+    }));
+    renderProcuras();
+    if (msg) toast(msg);
+  }
+
+  function renderProcuras() {
+    $("#nProcuras").textContent = procuras.length || "";
+    $("#procurasVazia").hidden = procuras.length > 0;
+    $("#listaProcuras").innerHTML = procuras.map((p) => {
+      const tel = p.telefone ? (p.telefone.length <= 11 ? "55" + p.telefone : p.telefone) : "";
+      const msg = encodeURIComponent(`Olá${p.cliente ? " " + p.cliente : ""}! Aqui é da MT Multimarcas. Sobre a ${p.modelo}${p.ano ? " " + p.ano : ""} que você procurou: `);
+      const partes = [
+        p.precoMax ? `Até <b>${BRL.format(p.precoMax)}</b>` : "",
+        p.uf ? esc(p.uf) : "",
+        p.cliente ? `Cliente: <b>${esc(p.cliente)}</b>` : "Sem cliente",
+        p.telefone ? esc(p.telefone) : "",
+      ].filter(Boolean).join(" · ");
+      return `
+      <li class="procura" data-id="${esc(p.id)}">
+        <h3>${esc(p.modelo)} ${esc(p.ano)}</h3>
+        <p>${partes}</p>
+        ${p.obs ? `<p>${esc(p.obs)}</p>` : ""}
+        <p class="dica">Salva em ${new Date(p.criadoEm).toLocaleDateString("pt-BR")}</p>
+        <div class="procura__acoes">
+          ${tel ? `<a class="icone icone--whats" href="https://wa.me/${tel}?text=${msg}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> <b>Cliente</b></a>` : ""}
+          <button class="icone" data-acao="rebuscar"><i class="fa-solid fa-magnifying-glass"></i> <b>Buscar de novo</b></button>
+          <button class="icone icone--perigo" data-acao="apagar" aria-label="Apagar procura"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </li>`;
+    }).join("");
+  }
+
+  $("#listaProcuras").addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-acao]");
+    if (!b) return;
+    const p = procuras.find((x) => x.id === b.closest(".procura").dataset.id);
+    if (!p) return;
+    if (b.dataset.acao === "rebuscar") {
+      preencherBusca(p);
+      abrirAba("busca");
+      buscar({ ...p, recentes: fBusca.recentes.checked });
+    } else if (confirm(`Apagar a procura de ${p.modelo}${p.cliente ? " para " + p.cliente : ""}?`)) {
+      try { await salvarProcuras(procuras.filter((x) => x !== p), "Procura apagada."); }
+      catch (err) { toast(err.message, true); }
+    }
+  });
+
+  $("#formProcura").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const b = ultimaBusca || lerBusca();
+    if (!b.modelo) { toast("Faça a busca primeiro.", true); return; }
+    const nova = {
+      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+      modelo: b.modelo, ano: b.ano, precoMax: b.precoMax, uf: b.uf,
+      cliente: f.cliente.value.trim(), telefone: f.telefone.value.replace(/\D/g, ""), obs: f.obs.value.trim(),
+      criadoEm: new Date().toISOString(),
+    };
+    try {
+      await salvarProcuras([nova, ...procuras], "Procura salva! Está na aba Procuras.");
+      f.reset();
+    } catch (err) { toast(err.message, true); }
   });
 
   /* ---------- Início ---------- */
