@@ -157,7 +157,7 @@ function onGuestConnection(conn) {
     // input só vale de quem está jogando agora
     if (m.t === "in" && current && current.id === id) {
       const clean = sanitizeInput(m);
-      if (clean) { toAgent(clean); showViz(clean.b); }
+      if (clean) { toAgent(clean); showViz(clean.b, clean); }
     }
   });
   conn.on("close", () => dropGuest(id));
@@ -168,7 +168,7 @@ function dropGuest(id, reason) {
   const g = guests.get(id);
   if (!g) return;
   if (current && current.id === id) {
-    toAgent(NEUTRAL); showViz(0);
+    toAgent(NEUTRAL); showViz(0, NEUTRAL);
     try { current.call?.close(); } catch {}
     current = null; renderCurrent();
   }
@@ -254,6 +254,13 @@ function renderCurrent() {
 }
 
 const vizEls = BUTTONS.map((n) => { const s = document.createElement("span"); s.className = "btnviz"; s.textContent = n; $("viz").append(s); return s; });
-function showViz(b) { vizEls.forEach((el, i) => el.classList.toggle("on", !!(b & (1 << i)))); }
+const stickEl = document.createElement("span"); stickEl.className = "btnviz mono"; $("viz").append(stickEl);
+const f = (v) => (v >= 0 ? "+" : "") + v.toFixed(1);
+function showViz(b, s = NEUTRAL) {
+  vizEls.forEach((el, i) => el.classList.toggle("on", !!(b & (1 << i))));
+  stickEl.textContent = `Esq ${f(s.lx)} ${f(-s.ly)} · Dir ${f(s.rx)} ${f(-s.ry)} · LT ${s.lt.toFixed(1)} RT ${s.rt.toFixed(1)}`;
+  stickEl.classList.toggle("on", !!(s.lx || s.ly || s.rx || s.ry || s.lt || s.rt));
+}
+showViz(0);
 
 addEventListener("beforeunload", () => toAgent(NEUTRAL));
