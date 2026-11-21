@@ -37,7 +37,9 @@ O controle virtual aparece pro jogo como um controle de Xbox comum. Se você tam
 
 ## Publicar o site (pros amigos abrirem o play.html)
 
-O jeito mais fácil é o **GitHub Pages**:
+Já publicado em **https://passa-o-controle.netlify.app** (link pros amigos: `/play.html`). O painel já vem com esse endereço.
+
+Para publicar em outro lugar, uma opção é o **GitHub Pages**:
 
 1. No GitHub, abra o repositório → **Settings → Pages**.
 2. Em "Branch", escolha a branch que tem a pasta `gta-remote` e a pasta `/ (root)`, e salve.

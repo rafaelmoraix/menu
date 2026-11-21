@@ -1,7 +1,7 @@
 import { BUTTONS, NEUTRAL, sanitizeInput, randomId, randomPin, fmtTime } from "./shared.js";
 
 const $ = (id) => document.getElementById(id);
-const DEFAULT_SITE = "https://rafaelmoraix.github.io/menu/gta-remote/web/play.html";
+const DEFAULT_SITE = "https://passa-o-controle.netlify.app/play.html";
 const MAX_PIN_TRIES = 3;        // por pessoa
 const MAX_GLOBAL_FAILS = 10;    // somando todo mundo → PIN é trocado
 const MAX_QUEUE = 8;
