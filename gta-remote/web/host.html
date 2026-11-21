@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Passa o Controle — Host</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand"><span class="dot"></span> Painel do dono</div>
+      <div class="row">
+        <span id="agentPill" class="pill bad">agente: offline</span>
+        <span id="roomPill" class="pill">sala fechada</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div>
+        <div class="stage">
+          <video id="preview" muted playsinline autoplay></video>
+          <div class="hud"><span></span><span class="timer" id="timer" hidden>0:00</span></div>
+          <div class="overlay" id="previewOverlay">
+            <div>
+              <h2>Nada sendo transmitido</h2>
+              <p class="muted">Clique em "Abrir sala" e escolha a janela do GTA<br />(ou do app Xbox com o Jogo Remoto aberto).</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <h2>Jogador atual</h2>
+          <div id="current" class="muted">Ninguém jogando.</div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn ghost small" id="addTime" disabled>+2 min</button>
+            <button class="btn danger" id="kickBtn" disabled>Tirar jogador</button>
+            <button class="btn danger" id="panicBtn">🛑 Pânico: fecha tudo</button>
+          </div>
+          <div class="pads" id="viz" style="margin-top:12px"></div>
+        </div>
+      </div>
+
+      <aside style="display:grid;gap:16px;align-content:start">
+        <div class="card">
+          <h2>Sala</h2>
+          <label for="minutes">Minutos por jogador</label>
+          <input id="minutes" type="number" min="1" max="30" value="5" />
+          <label for="siteUrl">Endereço público do site (play.html)</label>
+          <input id="siteUrl" type="url" placeholder="https://seu-site/play.html" />
+          <div class="row" style="margin-top:14px">
+            <button class="btn" id="openBtn">Abrir sala</button>
+            <button class="btn ghost" id="closeBtn" disabled>Fechar</button>
+          </div>
+          <div id="shareBox" hidden style="margin-top:14px">
+            <label>Link pros amigos</label>
+            <div class="share mono" id="shareLink"></div>
+            <div class="row" style="margin-top:8px">
+              <button class="btn ghost small" id="copyBtn">Copiar link</button>
+              <button class="btn ghost small" id="newPinBtn">Novo PIN</button>
+            </div>
+            <label>PIN (mande separado do link)</label>
+            <div class="big-code" id="pin">------</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Fila</h2>
+          <div class="list" id="queue"><span class="muted">Vazia.</span></div>
+        </div>
+
+        <div class="card">
+          <h2>Registro</h2>
+          <div id="log" class="mono muted" style="font-size:12px;max-height:200px;overflow:auto"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script type="module" src="host.js"></script>
+</body>
+</html>

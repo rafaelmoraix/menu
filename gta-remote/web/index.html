@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Passa o Controle</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand"><span class="dot"></span> Passa o Controle</div>
+      <a class="btn ghost small" href="play.html">Entrar numa sala</a>
+    </header>
+
+    <section style="margin-bottom:32px">
+      <h1>Joga GTA <em>no meu console</em>,<br />direto do navegador.</h1>
+      <p class="lead">
+        Você recebe um link e um PIN, eu aprovo, e você joga por alguns minutos usando seu
+        controle ou teclado e mouse. Sem instalar nada do seu lado.
+      </p>
+      <div class="row" style="margin-top:18px">
+        <a class="btn" href="play.html">🎮 Tenho um link, quero jogar</a>
+      </div>
+    </section>
+
+    <section class="grid" style="margin-bottom:32px">
+      <div class="card">
+        <h3>1. Pega o link + PIN</h3>
+        <p>O dono da sala te manda um link e um PIN de 6 dígitos. Sem os dois, ninguém entra.</p>
+      </div>
+      <div class="card">
+        <h3>2. Espera a aprovação</h3>
+        <p>O dono vê seu nome e aprova na hora. Só uma pessoa joga por vez.</p>
+      </div>
+      <div class="card">
+        <h3>3. Joga até o tempo acabar</h3>
+        <p>Controle de Xbox/PlayStation no PC, ou teclado e mouse. Quando o timer zera, a conexão fecha sozinha.</p>
+      </div>
+    </section>
+
+    <section class="card" style="margin-bottom:16px">
+      <h2>🔒 O que deixa isso seguro</h2>
+      <ol class="steps">
+        <li><b>Link secreto + PIN:</b> a sala tem um código aleatório longo e um PIN. 3 erros de PIN e a pessoa é bloqueada.</li>
+        <li><b>Aprovação manual:</b> ninguém joga sem o dono clicar em "Aprovar".</li>
+        <li><b>Só controle, nada mais:</b> quem joga manda apenas botões e analógicos. Nada de teclado no PC do dono, nada de arquivos, nada de mouse no Windows.</li>
+        <li><b>Botão Xbox bloqueado:</b> o botão do meio não existe no sistema. Ele é descartado no navegador do jogador, de novo no host e mais uma vez no agente local.</li>
+        <li><b>Tempo limite + botão de pânico:</b> a sessão acaba sozinha, e o dono pode derrubar todo mundo a qualquer momento.</li>
+        <li><b>Conexão criptografada:</b> vídeo e comandos vão direto entre os navegadores (WebRTC, criptografado ponta a ponta).</li>
+      </ol>
+    </section>
+
+    <p class="muted" style="font-size:13px">
+      É o dono da sala? O painel de host roda no seu próprio PC. Veja o <span class="mono">README.md</span> da pasta <span class="mono">gta-remote</span>.
+    </p>
+  </div>
+</body>
+</html>
