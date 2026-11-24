@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140" fill="none" stroke="#3a5a8c" stroke-linecap="round" stroke-linejoin="round" stroke-width="5">
+  <g transform="translate(30 10) scale(.32)">
+    <path d="M190 14 L12 168 L170 318 L176 232"/>
+    <path d="M150 4 L162 104"/>
+    <path d="M72 118 Q42 168 76 216"/>
+  </g>
+  <g transform="translate(-30 80) scale(.32)">
+    <path d="M190 14 L12 168 L170 318 L176 232"/>
+    <path d="M150 4 L162 104"/>
+  </g>
+  <g transform="translate(90 80) scale(.32)">
+    <path d="M190 14 L12 168 L170 318 L176 232"/>
+    <path d="M150 4 L162 104"/>
+  </g>
+</svg>
