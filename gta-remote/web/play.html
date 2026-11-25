@@ -21,9 +21,11 @@
             <span class="pill" id="padPill">sem controle</span>
             <span class="timer" id="timer" hidden>0:00</span>
           </div>
+          <div class="focus-warn" id="focusWarn" hidden>⚠️ Clique aqui nesta janela: o controle só funciona com ela em foco.</div>
           <div class="overlay" id="overlay">
             <form id="joinForm" style="width:min(360px,100%)">
               <h2>Entrar na sala</h2>
+              <div id="padBox" class="notice" style="margin-bottom:6px;text-align:left">🎮 <b>Ligue o controle no PC</b> e <b>aperte qualquer botão</b> com esta página aberta.</div>
               <label for="room">Código da sala</label>
               <input id="room" type="text" autocomplete="off" required placeholder="cole o link ou o código" />
               <label for="name">Seu nome</label>
@@ -51,9 +53,17 @@
       </div>
 
       <aside class="card">
-        <h2>Controles</h2>
-        <p class="muted" style="margin-bottom:10px">Controle de Xbox/PS ligado no PC funciona direto (aperta qualquer botão pra ele aparecer). O botão do meio está bloqueado.</p>
-        <table class="map">
+        <h2>Como jogar</h2>
+        <ol class="steps" style="margin-top:0">
+          <li><b>Ligue seu controle no PC</b> (Xbox ou PlayStation, por cabo ou Bluetooth).</li>
+          <li>Abra este site no <b>Chrome ou Edge</b>.</li>
+          <li><b>Aperte qualquer botão</b> até aparecer "Controle reconhecido".</li>
+          <li>Durante o jogo, <b>deixe esta janela na frente</b>. Se clicar em outra, o controle para.</li>
+        </ol>
+        <p class="muted" style="font-size:13px">O botão do meio (Xbox/PS) não funciona aqui, é bloqueado de propósito.</p>
+        <details style="margin-top:10px">
+        <summary class="muted" style="cursor:pointer">Sem controle? Teclado e mouse</summary>
+        <table class="map" style="margin-top:8px">
           <tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>Andar (analógico esquerdo)</td></tr>
           <tr><td>Mouse</td><td>Câmera (analógico direito)</td></tr>
           <tr><td>Botão esq. / <kbd>K</kbd></td><td>Atirar / acelerar (RT)</td></tr>
@@ -70,6 +80,7 @@
           <tr><td><kbd>P</kbd> / <kbd>Enter</kbd></td><td>Pausa (Menu)</td></tr>
           <tr><td>Setas</td><td>Direcional</td></tr>
         </table>
+        </details>
       </aside>
     </div>
   </div>

@@ -158,15 +158,55 @@ const clamp1 = (v) => Math.max(-1, Math.min(1, v));
 const viz = $("viz");
 const vizEls = BUTTONS.map((n) => { const s = document.createElement("span"); s.className = "btnviz"; s.textContent = n; viz.append(s); return s; });
 
+// Escolhe o controle certo: o último que teve um botão/analógico mexido.
+// (Alguns PCs listam outros aparelhos como "controle": volante, fone, etc.)
+let activePad = -1;
+function pickPad() {
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter((p) => p && p.connected) : [];
+  if (!pads.length) { activePad = -1; return null; }
+  for (const p of pads) {
+    const moved = p.buttons.some((x) => x.pressed) || p.axes.some((a) => Math.abs(a) > 0.5);
+    if (moved) activePad = p.index;
+  }
+  return pads.find((p) => p.index === activePad) || pads.find((p) => p.mapping === "standard") || pads[0];
+}
+
+let padShown = "";
+function updatePadUI(pad) {
+  const label = pad ? pad.id.replace(/\s*\(.*?(Vendor|STANDARD).*?\)\s*/gi, " ").trim().slice(0, 40) || "Controle" : "";
+  const key = pad ? pad.index + label + pad.mapping : "none";
+  if (key === padShown) return;
+  padShown = key;
+  $("padPill").textContent = pad ? "🎮 controle ok" : "sem controle";
+  $("padPill").className = "pill " + (pad ? "ok" : "warn");
+  const box = $("padBox");
+  if (!pad) {
+    box.className = "notice";
+    box.innerHTML = "🎮 <b>Ligue o controle no PC</b> (cabo ou Bluetooth) e <b>aperte qualquer botão</b> com esta página aberta.";
+  } else {
+    box.className = "notice ok";
+    box.textContent = `✅ Controle reconhecido: ${label}` + (pad.mapping === "standard" ? "" : " (use Chrome ou Edge se algum botão ficar trocado)");
+  }
+}
+addEventListener("gamepadconnected", () => { padShown = ""; });
+addEventListener("gamepaddisconnected", () => { padShown = ""; activePad = -1; });
+
+// Avisa quando a janela perde o foco: o navegador para de ler o controle.
+function updateFocus() {
+  $("focusWarn").hidden = !playing || (document.hasFocus() && !document.hidden);
+}
+addEventListener("focus", updateFocus); addEventListener("blur", updateFocus);
+document.addEventListener("visibilitychange", updateFocus);
+setInterval(updateFocus, 1000);
+
 let last = "", lastSent = 0;
 function frame(now) {
   requestAnimationFrame(frame);
   let b = 0, lx = 0, ly = 0, rx = 0, ry = 0, lt = 0, rt = 0;
 
-  // controle físico
-  const pads = navigator.getGamepads ? [...navigator.getGamepads()].filter(Boolean) : [];
-  const pad = pads.find((p) => p.mapping === "standard") || pads[0];
-  $("padPill").textContent = pad ? "🎮 controle ok" : "⌨️ teclado/mouse";
+  // controle físico (o controle ligado no PC do amigo)
+  const pad = pickPad();
+  updatePadUI(pad);
   if (pad) {
     pad.buttons.forEach((btn, i) => {
       const name = STD_PAD_MAP[i]; // índice 16 (botão Xbox) não está no mapa → ignorado
