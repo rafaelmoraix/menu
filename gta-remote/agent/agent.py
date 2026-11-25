@@ -101,7 +101,9 @@ class Pad:
         self.active = True
 
 
-PAD: Pad | None = None
+PAD = None
+TESTING = False
+INPUT_COUNT = 0
 
 
 @web.middleware
@@ -119,6 +121,7 @@ async def guard(request, handler):
 
 
 async def ws_handler(request):
+    global INPUT_COUNT
     if request.headers.get("Origin") not in ALLOWED_ORIGINS:
         return web.Response(status=403, text="origem não permitida")
     ws = web.WebSocketResponse(heartbeat=10, max_msg_size=4096)
@@ -133,12 +136,51 @@ async def ws_handler(request):
                 msg = json.loads(m.data)
             except ValueError:
                 continue
-            if isinstance(msg, dict) and msg.get("t") == "in":
+            if not isinstance(msg, dict):
+                continue
+            if msg.get("t") == "in" and not TESTING:
+                INPUT_COUNT += 1
                 PAD.apply(msg)
+            elif msg.get("t") == "test" and not TESTING:
+                asyncio.create_task(run_test(ws))
     finally:
         PAD.reset()
         print("Painel desconectado — controle solto.")
     return ws
+
+
+async def say(ws, text):
+    print(text)
+    try:
+        await ws.send_str(json.dumps({"t": "info", "text": text}))
+    except Exception:  # noqa: BLE001
+        pass
+
+
+async def run_test(ws):
+    """Sequência fixa pra testar sozinho: dá 5s pra você clicar na janela do jogo."""
+    global TESTING
+    TESTING = True
+    try:
+        for i in range(5, 0, -1):
+            await say(ws, f"TESTE: clique na janela do app Xbox/GTA! Começa em {i}...")
+            await asyncio.sleep(1)
+        steps = [
+            ("andando pra frente (analógico esquerdo)", {"ly": -1}, 2.5),
+            ("girando a câmera pra direita (analógico direito)", {"rx": 1}, 1.5),
+            ("direcional pra baixo", {"b": 1 << 11}, 0.3),
+            ("solto", {}, 0.5),
+        ]
+        for name, state, secs in steps:
+            await say(ws, f"TESTE: {name}")
+            end = time.monotonic() + secs
+            while time.monotonic() < end:
+                PAD.apply({"t": "in", **state})
+                await asyncio.sleep(0.05)
+        await say(ws, "TESTE: acabou. O personagem andou/a câmera girou?")
+    finally:
+        PAD.reset()
+        TESTING = False
 
 
 async def index(_request):
@@ -147,8 +189,15 @@ async def index(_request):
 
 async def watchdog(_app):
     async def loop():
+        global INPUT_COUNT
+        last_report = time.monotonic()
         while True:
             await asyncio.sleep(0.25)
+            if time.monotonic() - last_report >= 3:
+                if INPUT_COUNT:
+                    print(f"Recebendo comandos do jogador: {INPUT_COUNT} nos últimos 3s")
+                INPUT_COUNT = 0
+                last_report = time.monotonic()
             if PAD.active and time.monotonic() - PAD.last_input > IDLE_RESET_SECONDS:
                 PAD.reset()
 

@@ -20,15 +20,21 @@ let agent = null;
 function connectAgent() {
   if (location.hostname !== "127.0.0.1" && location.hostname !== "localhost") {
     $("agentPill").textContent = "abra esta página pelo agente (127.0.0.1)";
+    $("dAgent").textContent = "❌ abra http://127.0.0.1:8765/host.html";
     return;
   }
   agent = new WebSocket(`ws://${location.host}/ws`);
-  agent.onopen = () => { $("agentPill").textContent = "agente: ok"; $("agentPill").className = "pill ok"; };
+  agent.onopen = () => { $("agentPill").textContent = "agente: ok"; $("agentPill").className = "pill ok"; $("dAgent").textContent = "ok ✅"; };
   agent.onmessage = (e) => {
-    try { const m = JSON.parse(e.data); if (m.t === "info") log(`Agente: ${m.text}`); } catch {}
+    try {
+      const m = JSON.parse(e.data);
+      if (m.t !== "info") return;
+      if (m.text.startsWith("TESTE")) { $("testStatus").hidden = false; $("testStatus").textContent = m.text; }
+      else log(`Agente: ${m.text}`);
+    } catch {}
   };
   agent.onclose = () => {
-    $("agentPill").textContent = "agente: offline"; $("agentPill").className = "pill bad";
+    $("agentPill").textContent = "agente: offline"; $("agentPill").className = "pill bad"; $("dAgent").textContent = "offline ❌ (o iniciar.bat está aberto?)";
     setTimeout(connectAgent, 1500);
   };
 }
@@ -157,7 +163,7 @@ function onGuestConnection(conn) {
     // input só vale de quem está jogando agora
     if (m.t === "in" && current && current.id === id) {
       const clean = sanitizeInput(m);
-      if (clean) { toAgent(clean); showViz(clean.b, clean); }
+      if (clean) { toAgent(clean); showViz(clean.b, clean); lastInputAt = performance.now(); inputCount++; }
     }
   });
   conn.on("close", () => dropGuest(id));
@@ -214,6 +220,21 @@ function tuneBitrate(call) {
     sender.setParameters(p).catch(() => {});
   }, 250);
 }
+
+// ---------- diagnóstico ----------
+let lastInputAt = 0, inputCount = 0;
+$("testBtn").onclick = () => {
+  if (!agent || agent.readyState !== WebSocket.OPEN) return log("Agente offline: abra o iniciar.bat.");
+  if (current) return log("Tem alguém jogando. Tire o jogador antes de testar.");
+  toAgent({ t: "test" });
+};
+setInterval(() => {
+  const el = $("dInput");
+  if (!lastInputAt) { el.textContent = current ? "nenhum ainda ❌" : "nenhum ainda"; return; }
+  const ago = (performance.now() - lastInputAt) / 1000;
+  el.textContent = ago < 1.5 ? `chegando ✅ (${inputCount}/s)` : `último há ${Math.round(ago)}s`;
+  inputCount = 0;
+}, 1000);
 
 // ---------- timer ----------
 setInterval(() => {

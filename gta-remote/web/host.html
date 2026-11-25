@@ -65,6 +65,17 @@
         </div>
 
         <div class="card">
+          <h2>Diagnóstico</h2>
+          <p class="muted" style="margin:0 0 10px">Testa sozinho: aperte o botão e, em até 5s, clique na janela do app Xbox. O personagem deve andar pra frente e a câmera girar.</p>
+          <button class="btn ghost" id="testBtn">🧪 Testar controle no jogo</button>
+          <div id="testStatus" class="notice" style="margin-top:10px" hidden></div>
+          <div class="list" style="margin-top:10px">
+            <div class="item"><span>Agente</span><b id="dAgent">offline</b></div>
+            <div class="item"><span>Comandos do jogador</span><b id="dInput">nenhum ainda</b></div>
+          </div>
+        </div>
+
+        <div class="card">
           <h2>Fila</h2>
           <div class="list" id="queue"><span class="muted">Vazia.</span></div>
         </div>
