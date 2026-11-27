@@ -61,7 +61,7 @@ Variáveis na Netlify (depois, publicar de novo):
 | `WHATSAPP_PHONE_ID` | "Phone number ID" do número da loja |
 | `WHATSAPP_APP_SECRET` | "App secret" do app na Meta (confere a assinatura do webhook) |
 | `WHATSAPP_VERIFY_TOKEN` | Já criado; colar o mesmo valor no campo "Verify token" da Meta |
-| `WHATSAPP_API_VERSION` | Opcional (padrão `v23.0`) |
+| `WHATSAPP_API_VERSION` | Opcional (padrão `v27.0`) |
 
 Webhook para cadastrar na Meta: `https://mt-multimarcas-catalogo.netlify.app/api/whatsapp/webhook`
 (assinar os campos **messages** e, na coexistência, **smb_message_echoes**).

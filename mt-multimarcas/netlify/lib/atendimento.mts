@@ -109,7 +109,7 @@ export async function registrarEntrada(tel: string, nome: string, texto: string,
 
 /** Envia texto pelo WhatsApp oficial (Cloud API da Meta). */
 export async function enviarWhatsApp(tel: string, texto: string): Promise<string> {
-  const versao = Netlify.env.get("WHATSAPP_API_VERSION") || "v23.0"
+  const versao = Netlify.env.get("WHATSAPP_API_VERSION") || "v27.0"
   const r = await fetch(`https://graph.facebook.com/${versao}/${Netlify.env.get("WHATSAPP_PHONE_ID")}/messages`, {
     method: "POST",
     headers: { authorization: `Bearer ${Netlify.env.get("WHATSAPP_TOKEN")}`, "content-type": "application/json" },
