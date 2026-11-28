@@ -428,3 +428,8 @@ legend { font-family: var(--fonte-titulo); font-weight: 800; color: var(--ouro);
   .conexao__acoes { grid-column: 1 / -1; }
   .conexao__acoes .btn { flex: 1; }
 }
+
+.parear { width: 100%; text-align: left; border-top: 1px solid var(--linha); padding-top: 12px; }
+.parear summary { cursor: pointer; color: var(--ouro-claro); font-weight: 600; font-size: .9rem; }
+.parear__form { display: grid; gap: 10px; margin: 12px 0; }
+.parear__codigo { font-family: var(--fonte-titulo); font-size: 2.2rem; font-weight: 900; letter-spacing: .12em; text-align: center; color: var(--ouro-claro); padding: 10px; border: 1px dashed var(--linha-forte); border-radius: 12px; margin-bottom: 8px; }

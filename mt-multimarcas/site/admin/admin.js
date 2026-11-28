@@ -1083,6 +1083,22 @@
   $("#modalQR").addEventListener("click", (e) => {
     if (e.target.closest("[data-fechar-qr]")) { $("#modalQR").hidden = true; clearInterval(timerQR); }
   });
+  $("#formParear").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    let tel = e.target.tel.value.replace(/\D/g, "");
+    if (tel.length <= 11) tel = "55" + tel;
+    const btn = e.target.querySelector("button");
+    btn.disabled = true;
+    try {
+      const { codigo } = await api("/api/conector/parear", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ tel }) });
+      const c = String(codigo).replace(/[^0-9A-Za-z]/g, "");
+      const box = $("#codigoParear");
+      box.hidden = false;
+      box.textContent = c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c;
+    } catch (err) { toast(err.message, true); }
+    finally { btn.disabled = false; }
+  });
+
   $("#btnDesconectar").addEventListener("click", async () => {
     if (!confirm("Desconectar o WhatsApp da loja do CRM? As mensagens param de chegar aqui até ler o QR code de novo.")) return;
     try { await api("/api/conector/desconectar", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); toast("WhatsApp desconectado."); }

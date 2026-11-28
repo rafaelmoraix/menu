@@ -334,6 +334,16 @@
           <li>Toque em <b>Configurações</b> (ou ⋮) → <b>Dispositivos conectados</b>.</li>
           <li>Toque em <b>Conectar dispositivo</b> e aponte a câmera para este QR code.</li>
         </ol>
+        <details class="parear">
+          <summary>O QR code não funciona? Conectar com número de telefone</summary>
+          <form id="formParear" class="parear__form">
+            <label class="campo"><span>Número do WhatsApp da loja (com DDD)</span>
+              <input name="tel" inputmode="tel" placeholder="(81) 98151-7440" required></label>
+            <button class="btn btn--ouro btn--bloco" type="submit"><i class="fa-solid fa-key"></i> Gerar código</button>
+          </form>
+          <div class="parear__codigo" id="codigoParear" hidden></div>
+          <p class="dica">No celular: <b>Dispositivos conectados → Conectar dispositivo → Conectar com número de telefone</b> e digite o código.</p>
+        </details>
       </div>
     </div>
   </div>

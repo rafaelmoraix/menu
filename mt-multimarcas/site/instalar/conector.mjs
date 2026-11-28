@@ -165,6 +165,17 @@ http.createServer(async (req, res) => {
       return json(res, 200, { id: await enviar(numero, String(texto).slice(0, 4000)) })
     }
 
+    if (req.method === "POST" && req.url === "/parear") {
+      // Alternativa ao QR code: código de 8 letras/números para digitar no celular
+      const { tel } = await lerCorpo(req)
+      const numero = String(tel || "").replace(/\D/g, "")
+      if (!/^\d{10,15}$/.test(numero)) return json(res, 400, { erro: "Telefone inválido" })
+      if (estado.conectado) return json(res, 409, { erro: "O WhatsApp já está conectado." })
+      if (!sock) return json(res, 503, { erro: "Conector iniciando, tente em alguns segundos." })
+      const codigo = await sock.requestPairingCode(numero)
+      return json(res, 200, { codigo })
+    }
+
     if (req.method === "POST" && req.url === "/desconectar") {
       await sock?.logout().catch(() => {})
       return json(res, 200, { ok: true })

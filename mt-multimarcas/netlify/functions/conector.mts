@@ -8,6 +8,7 @@ import {
 // Ligação com o conector de WhatsApp da VPS (modo QR code)
 // POST /api/conector/evento       <- a VPS avisa mensagem nova (token do conector)
 // GET  /api/conector/status       -> painel: conectado? QR code? (usuário logado)
+// POST /api/conector/parear       -> painel: código de 8 dígitos no lugar do QR (só gerente)
 // POST /api/conector/desconectar  -> painel: desconecta o aparelho (só gerente)
 
 const hash = (s: string) => createHash("sha256").update(s).digest()
@@ -46,6 +47,15 @@ export default async (req: Request, context: Context) => {
     if (acao === "status" && req.method === "GET") {
       const s = await chamarConector("/status")
       return Response.json({ configurado: true, conectado: !!s.conectado, numero: s.numero || null, qr: s.qr || null, desde: s.desde || null })
+    }
+    if (acao === "parear" && req.method === "POST") {
+      if (eu.papel !== "gerente") return Response.json({ erro: "Só o gerente pode conectar o WhatsApp." }, { status: 403 })
+      let corpo: any = {}
+      try { corpo = await req.json() } catch { /* vazio */ }
+      const tel = limparTel(corpo?.tel)
+      if (!telValido(tel)) return Response.json({ erro: "Informe o número com DDD." }, { status: 400 })
+      const r = await chamarConector("/parear", { tel })
+      return Response.json({ codigo: String(r.codigo || "") })
     }
     if (acao === "desconectar" && req.method === "POST") {
       if (eu.papel !== "gerente") return Response.json({ erro: "Só o gerente pode desconectar o WhatsApp." }, { status: 403 })
