@@ -1,7 +1,7 @@
 import type { Config, Context } from "@netlify/functions"
 import { autorizado, equipe, naoAutorizado } from "../lib/auth.mts"
 import {
-  ETAPAS, apagarDemo, atualizarConversa, enviarWhatsApp, limparTel, listarConversas, listarMensagens,
+  ETAPAS, apagarDemo, atualizarConversa, enviarMensagem, limparTel, listarConversas, listarMensagens,
   loja, modo, registrarEntrada, salvarMensagem, semearDemo, telValido, type Etapa,
 } from "../lib/atendimento.mts"
 
@@ -112,9 +112,9 @@ export default async (req: Request, context: Context) => {
       }
       const em = new Date().toISOString()
       let waId: string | undefined
-      if (modo() === "whatsapp") waId = await enviarWhatsApp(tel, texto)
+      if (modo() !== "demo") waId = await enviarMensagem(tel, texto)
       const mensagem = await salvarMensagem(tel, {
-        de: "loja", texto, em, atendente: eu.id, status: modo() === "whatsapp" ? "enviada" : "simulada", waId,
+        de: "loja", texto, em, atendente: eu.id, status: modo() === "demo" ? "simulada" : "enviada", waId,
       })
       const conversa = await atualizarConversa(tel, (c) => {
         if (!c) throw new Error("Conversa não encontrada.")

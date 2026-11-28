@@ -73,6 +73,15 @@
         </div>
       </div>
 
+      <div class="conexao cartao" id="conexao" hidden>
+        <span class="conexao__ponto" id="conexaoPonto"></span>
+        <div><b id="conexaoTitulo"></b><span id="conexaoTexto"></span></div>
+        <div class="conexao__acoes">
+          <button class="btn btn--ouro btn--sm" id="btnConectar" hidden><i class="fa-solid fa-qrcode"></i> Conectar WhatsApp</button>
+          <button class="btn btn--contorno btn--sm" id="btnDesconectar" hidden><i class="fa-solid fa-link-slash"></i> Desconectar</button>
+        </div>
+      </div>
+
       <div class="equipe" id="equipeResumo"></div>
 
       <div class="atend-grid" id="atendGrid">
@@ -307,6 +316,25 @@
         <button type="button" class="modal__fechar" data-fechar-moto aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div class="form-moto__corpo"><ul class="lista" id="listaMotoChat"></ul></div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalQR" hidden>
+    <div class="modal__fundo" data-fechar-qr></div>
+    <div class="modal__caixa mini" role="dialog" aria-modal="true" aria-labelledby="tituloQR">
+      <div class="form-moto__cab">
+        <h2 id="tituloQR">Conectar o WhatsApp da loja</h2>
+        <button type="button" class="modal__fechar" data-fechar-qr aria-label="Fechar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-moto__corpo qr">
+        <div class="qr__img" id="qrCaixa"><i class="fa-solid fa-spinner fa-spin"></i></div>
+        <p class="qr__status" id="qrStatus">Gerando QR code...</p>
+        <ol class="qr__passos">
+          <li>No <b>celular da loja</b>, abra o <b>WhatsApp Business</b>.</li>
+          <li>Toque em <b>Configurações</b> (ou ⋮) → <b>Dispositivos conectados</b>.</li>
+          <li>Toque em <b>Conectar dispositivo</b> e aponte a câmera para este QR code.</li>
+        </ol>
+      </div>
     </div>
   </div>
 

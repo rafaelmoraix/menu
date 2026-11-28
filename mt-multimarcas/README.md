@@ -51,6 +51,20 @@ Trocar a senha desconecta quem estiver logado. O login é limitado a 10 tentativ
 - **Modo demonstração** (enquanto o WhatsApp não está ligado): conversas de teste num armazenamento
   separado, botão "Simular cliente" e, para o gerente, "Reiniciar".
 
+### Ligar o WhatsApp por QR code (conector na VPS) — modo usado pela loja
+
+Conexão não oficial, como o WhatsApp Web (risco de bloqueio do número pelo WhatsApp; evite disparo em massa).
+
+1. VPS Ubuntu (1–2 GB). No terminal dela, como root:
+   `curl -fsSL https://mt-multimarcas-catalogo.netlify.app/instalar/instalar.sh | bash -s -- <CONECTOR_TOKEN>`
+   (instala Node 22, Caddy com HTTPS em `<ip>.sslip.io` e o serviço `mt-conector`).
+2. Na Netlify: `CONECTOR_TOKEN` (o mesmo do comando) e `CONECTOR_URL` (o endereço que o instalador mostra). Publicar de novo.
+3. No painel → Atendimento → **Conectar WhatsApp** → ler o QR code com o celular da loja
+   (WhatsApp Business → Dispositivos conectados → Conectar dispositivo).
+
+Arquivos do conector: `site/instalar/` (conector.mjs, package.json, instalar.sh).
+Logs na VPS: `journalctl -u mt-conector -f`. Se a API oficial for configurada depois, ela tem prioridade.
+
 ### Ligar o WhatsApp oficial (Meta Cloud API, modo coexistência)
 
 Variáveis na Netlify (depois, publicar de novo):

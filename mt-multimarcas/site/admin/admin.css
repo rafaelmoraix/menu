@@ -404,3 +404,27 @@ legend { font-family: var(--fonte-titulo); font-weight: 800; color: var(--ouro);
 .convs { grid-template-columns: minmax(0, 1fr); overflow-x: hidden; }
 .admin textarea { font: inherit; }
 @media (min-width: 901px) { .atend-grid { height: calc(100dvh - 130px); min-height: 560px; } }
+
+/* Conexão do WhatsApp (modo QR code) */
+.conexao { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; }
+.conexao div:not(.conexao__acoes) { display: grid; gap: 2px; font-size: .9rem; }
+.conexao span:not(.conexao__ponto) { color: var(--texto-2); }
+.conexao__ponto { width: 14px; height: 14px; border-radius: 50%; background: #9aa5b1; }
+.conexao--ok { border-color: rgba(37,211,102,.35); }
+.conexao--ok .conexao__ponto { background: var(--verde); box-shadow: 0 0 0 5px rgba(37,211,102,.18); }
+.conexao--off { border-color: rgba(232,176,74,.45); }
+.conexao--off .conexao__ponto { background: var(--ouro); animation: pulso-p 1.6s infinite; }
+.conexao--erro { border-color: rgba(224,83,61,.45); }
+.conexao--erro .conexao__ponto { background: var(--vermelho); }
+@keyframes pulso-p { 50% { opacity: .35; } }
+.conexao__acoes { display: flex; gap: 8px; }
+.qr { justify-items: center; text-align: center; }
+.qr__img { width: 280px; height: 280px; border-radius: 14px; background: #fff; display: grid; place-items: center; font-size: 2rem; color: #333; overflow: hidden; }
+.qr__img img { width: 100%; height: 100%; }
+.qr__status { color: var(--texto-2); font-size: .9rem; margin: 0; }
+.qr__passos { text-align: left; color: var(--texto-2); font-size: .92rem; margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+@media (max-width: 900px) {
+  .conexao { grid-template-columns: auto minmax(0, 1fr); }
+  .conexao__acoes { grid-column: 1 / -1; }
+  .conexao__acoes .btn { flex: 1; }
+}

@@ -1,6 +1,6 @@
 import type { Config } from "@netlify/functions"
 import { createHmac, timingSafeEqual } from "node:crypto"
-import { atualizarConversa, limparTel, loja, registrarEntrada, salvarMensagem, telValido } from "../lib/atendimento.mts"
+import { limparTel, loja, registrarEntrada, registrarSaidaCelular, telValido } from "../lib/atendimento.mts"
 
 /* Webhook do WhatsApp oficial (Meta Cloud API)
    URL para cadastrar na Meta: https://<site>/api/whatsapp/webhook
@@ -81,13 +81,7 @@ export default async (req: Request) => {
         const tel = limparTel(m.to)
         if (!telValido(tel) || (m.id && (await loja().get(`wa/${m.id}`)))) continue
         const em = m.timestamp ? new Date(Number(m.timestamp) * 1000).toISOString() : new Date().toISOString()
-        const texto = textoDe(m)
-        await salvarMensagem(tel, { de: "loja", texto, em, atendente: null, status: "celular", waId: m.id })
-        await atualizarConversa(tel, (c) => ({
-          tel, nome: c?.nome || `+${tel}`, atendente: c?.atendente ?? null, etapa: c?.etapa ?? "atendimento",
-          notas: c?.notas ?? "", naoLidas: 0, ultima: { texto: texto.slice(0, 140), de: "loja", em },
-          ultimaEntradaEm: c?.ultimaEntradaEm ?? null, criadoEm: c?.criadoEm ?? em, atualizadoEm: em,
-        }))
+        await registrarSaidaCelular(tel, textoDe(m), em, m.id)
       }
     }
   }

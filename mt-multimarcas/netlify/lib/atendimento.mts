@@ -37,7 +37,9 @@ export type Mensagem = {
 }
 
 export const whatsappAtivo = () => !!(Netlify.env.get("WHATSAPP_TOKEN") && Netlify.env.get("WHATSAPP_PHONE_ID"))
-export const modo = () => (whatsappAtivo() ? "whatsapp" : "demo")
+export const conectorAtivo = () => !!(Netlify.env.get("CONECTOR_URL") && (Netlify.env.get("CONECTOR_TOKEN") || "").length >= 20)
+/** whatsapp = API oficial da Meta | qrcode = conector na VPS | demo = demonstração */
+export const modo = (): "whatsapp" | "qrcode" | "demo" => (whatsappAtivo() ? "whatsapp" : conectorAtivo() ? "qrcode" : "demo")
 export const loja = () => getStore({ name: modo() === "demo" ? "atendimento-demo" : "atendimento", consistency: "strong" })
 
 export const limparTel = (t: unknown) => String(t ?? "").replace(/\D/g, "").slice(0, 15)
@@ -104,6 +106,42 @@ export async function registrarEntrada(tel: string, nome: string, texto: string,
     ultimaEntradaEm: em,
     criadoEm: c?.criadoEm ?? em,
     atualizadoEm: em,
+  }))
+}
+
+/** Chama o conector da VPS (modo QR code). */
+export async function chamarConector(caminho: string, corpo?: object) {
+  const base = (Netlify.env.get("CONECTOR_URL") || "").replace(/\/$/, "")
+  let r: Response
+  try {
+    r = await fetch(base + caminho, {
+      method: corpo ? "POST" : "GET",
+      headers: { authorization: `Bearer ${Netlify.env.get("CONECTOR_TOKEN")}`, "content-type": "application/json" },
+      body: corpo ? JSON.stringify(corpo) : undefined,
+      signal: AbortSignal.timeout(20000),
+    })
+  } catch {
+    throw new Error("Não foi possível falar com o servidor do WhatsApp (VPS). Ele está ligado?")
+  }
+  const dados: any = await r.json().catch(() => ({}))
+  if (!r.ok) throw new Error(dados?.erro || `O servidor do WhatsApp respondeu ${r.status}.`)
+  return dados
+}
+
+/** Envia pelo canal ativo e devolve o id da mensagem no WhatsApp. */
+export async function enviarMensagem(tel: string, texto: string): Promise<string | undefined> {
+  if (modo() === "whatsapp") return enviarWhatsApp(tel, texto)
+  if (modo() === "qrcode") return (await chamarConector("/enviar", { tel, texto }))?.id || undefined
+  return undefined
+}
+
+/** Mensagem que alguém da loja mandou direto pelo celular. */
+export async function registrarSaidaCelular(tel: string, texto: string, em: string, waId?: string) {
+  await salvarMensagem(tel, { de: "loja", texto, em, atendente: null, status: "celular", waId })
+  return atualizarConversa(tel, (c) => ({
+    tel, nome: c?.nome || `+${tel}`, atendente: c?.atendente ?? null, etapa: c?.etapa ?? "atendimento",
+    notas: c?.notas ?? "", naoLidas: 0, ultima: { texto: texto.slice(0, 140), de: "loja", em },
+    ultimaEntradaEm: c?.ultimaEntradaEm ?? null, criadoEm: c?.criadoEm ?? em, atualizadoEm: em,
   }))
 }
 

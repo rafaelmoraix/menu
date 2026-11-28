@@ -1040,11 +1040,63 @@
     } catch (err) { toast(err.message, true); }
   });
 
+  /* ---------- Conexão do WhatsApp (modo QR code / VPS) ---------- */
+  let conexao = null, timerQR = null;
+  async function atualizarConexao() {
+    if (atend.modo !== "qrcode") { $("#conexao").hidden = true; return; }
+    let s;
+    try { s = await api("/api/conector/status"); }
+    catch (err) { s = { configurado: true, conectado: false, erro: err.message }; }
+    conexao = s;
+    const box = $("#conexao");
+    box.hidden = !s.configurado;
+    box.className = `conexao cartao conexao--${s.erro ? "erro" : s.conectado ? "ok" : "off"}`;
+    $("#conexaoTitulo").textContent = s.erro ? "Servidor do WhatsApp fora do ar" : s.conectado ? "WhatsApp conectado" : "WhatsApp desconectado";
+    $("#conexaoTexto").textContent = s.erro ? s.erro
+      : s.conectado ? `Número ${telBonito(s.numero || "")} recebendo e enviando pelo CRM.`
+      : "As mensagens não estão chegando. Conecte lendo o QR code com o celular da loja.";
+    $("#btnConectar").hidden = !!(s.conectado || s.erro);
+    $("#btnDesconectar").hidden = !(s.conectado && eu?.papel === "gerente");
+    if (!$("#modalQR").hidden) renderQR();
+  }
+  function renderQR() {
+    const s = conexao || {};
+    if (s.conectado) {
+      $("#qrCaixa").innerHTML = `<i class="fa-solid fa-circle-check" style="color:var(--verde);font-size:4rem"></i>`;
+      $("#qrStatus").textContent = "Conectado! Pode fechar esta janela.";
+      clearInterval(timerQR);
+      setTimeout(() => { $("#modalQR").hidden = true; }, 2000);
+    } else if (s.qr) {
+      $("#qrCaixa").innerHTML = `<img src="${esc(s.qr)}" alt="QR code para conectar o WhatsApp">`;
+      $("#qrStatus").textContent = "Aguardando a leitura... (o código muda sozinho a cada poucos segundos)";
+    } else {
+      $("#qrCaixa").innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+      $("#qrStatus").textContent = s.erro || "Gerando QR code...";
+    }
+  }
+  $("#btnConectar").addEventListener("click", () => {
+    $("#modalQR").hidden = false;
+    renderQR();
+    clearInterval(timerQR);
+    timerQR = setInterval(atualizarConexao, 3000);
+  });
+  $("#modalQR").addEventListener("click", (e) => {
+    if (e.target.closest("[data-fechar-qr]")) { $("#modalQR").hidden = true; clearInterval(timerQR); }
+  });
+  $("#btnDesconectar").addEventListener("click", async () => {
+    if (!confirm("Desconectar o WhatsApp da loja do CRM? As mensagens param de chegar aqui até ler o QR code de novo.")) return;
+    try { await api("/api/conector/desconectar", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); toast("WhatsApp desconectado."); }
+    catch (err) { toast(err.message, true); }
+    setTimeout(atualizarConexao, 2000);
+  });
+
   /* ---------- Atualização automática ---------- */
   function iniciarAtendimento() {
     clearInterval(atend.timer);
-    carregarConversas();
+    carregarConversas().then(atualizarConexao);
+    let voltas = 0;
     atend.timer = setInterval(() => {
+      if (++voltas % 4 === 0 && document.visibilityState === "visible") atualizarConexao();
       if (document.visibilityState !== "visible" || !token) return;
       carregarConversas(true);
       if (atend.aberta && !$("#abaAtendimento").hidden) carregarMensagens();
